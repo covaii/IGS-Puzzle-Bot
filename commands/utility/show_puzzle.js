@@ -19,7 +19,13 @@ module.exports = {
             return;
         }
 
-        response = await getPuzzle(id);
+        try{
+            response = await getPuzzle(id);
+        }catch(error){
+            await interaction.reply("Error getting puzzle, puzzle may be private");
+            return;
+        }
+
         whiteStonesInital = response.data.puzzle.initial_state.white;
         blackStonesInital = response.data.puzzle.initial_state.black;
 
