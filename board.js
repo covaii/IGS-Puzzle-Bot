@@ -1,41 +1,30 @@
 const fs = require('fs');
 const sharp = require('sharp');
+const { addUserActiveStone,getUsersActiveStones, getActivePuzzleID,getActiveServerName, removeLastUserStone,checkSolved,
+    incrementScore,incrementTries,setSolved
+        } = require("./database.js");
+const { getInitialStones,getPlayerColor,getMoveTree,getPuzzleAuthor,getPuzzleDiscription } = require('./OGS.js');
+const { EmbedBuilder,AttachmentBuilder } = require("discord.js");
+const Wgo = require("wgo");
 
 class GoBoardImageBuilder {
     constructor(size = 19) {
         this.size = size;
-        this.boardSize = 600; // pixels
-        this.margin = 60; // Increased margin to accommodate labels
+        this.boardSize = 400; // pixels
+        this.margin = 40; // margin for labels
         this.gridSize = (this.boardSize - 2 * this.margin) / (this.size - 1);
     }
 
-    // Convert SGF coordinate (e.g., "aa") to x,y coordinates
-    sgfToCoords(sgf) {
-        if (!sgf || sgf.length !== 2) return null;
-        const x = sgf.charCodeAt(0) - 'a'.charCodeAt(0);
-        const y = sgf.charCodeAt(1) - 'a'.charCodeAt(0);
-        return { x, y };
-    }
-
-    // Convert x,y coordinates to SGF coordinate
-    coordsToSgf(x, y) {
-        return String.fromCharCode('a'.charCodeAt(0) + x) + 
-               String.fromCharCode('a'.charCodeAt(0) + y);
-    }
-
-    calculateBoundingBox(stones, padding = 2) {
+    calculateBoundingBox(stones, padding = 1) {
         if (stones.length === 0) return null;
 
-        // Convert all SGF positions to x,y coordinates
-        const positions = stones.map(stone => this.sgfToCoords(stone.pos));
-
-        // Always include top-left corner (0,0) in the bounding box
-        let minX = 0;  // Changed to always start from 0
-        let minY = 0;  // Changed to always start from 0
+        // Always include top-left corner
+        let minX = 0;
+        let minY = 0;
         
         // Find max coordinates
-        let maxX = Math.max(...positions.map(pos => pos.x));
-        let maxY = Math.max(...positions.map(pos => pos.y));
+        let maxX = Math.max(...stones.map(stone => stone.x));
+        let maxY = Math.max(...stones.map(stone => stone.y));
 
         // Add padding (only to max values since min values are fixed at 0)
         maxX = Math.min(this.size - 1, maxX + padding);
@@ -48,9 +37,12 @@ class GoBoardImageBuilder {
         const svgContent = this.generateSVG(stones, padding);
         try {
             await sharp(Buffer.from(svgContent))
-                .png()
+                .png({
+                    compressionLevel: 9,
+                    quality: 80
+                })
                 .toFile(outputPath);
-            // console.log(`Board saved as ${outputPath}`);
+            console.log(`Board saved as ${outputPath}`);
         } catch (error) {
             console.error('Error converting to PNG:', error);
         }
@@ -61,11 +53,11 @@ class GoBoardImageBuilder {
         try {
             await sharp(Buffer.from(svgContent))
                 .jpeg({
-                    quality: 90,
+                    quality: 80,
                     chromaSubsampling: '4:4:4'
                 })
                 .toFile(outputPath);
-            // console.log(`Board saved as ${outputPath}`);
+            console.log(`Board saved as ${outputPath}`);
         } catch (error) {
             console.error('Error converting to JPG:', error);
         }
@@ -73,9 +65,8 @@ class GoBoardImageBuilder {
 
     generateSVG(stones = [], padding = 2) {
         const box = this.calculateBoundingBox(stones, padding);
-        if (!box) return this.generateFullBoardSVG(stones); // Fallback to full board if no stones
+        // if (!box) return this.generateFullBoardSVG(stones);
 
-        // Calculate dimensions for the cropped view
         const width = box.maxX - box.minX + 1;
         const height = box.maxY - box.minY + 1;
         const svgWidth = width * this.gridSize + 2 * this.margin;
@@ -83,7 +74,7 @@ class GoBoardImageBuilder {
 
         const svgContent = [];
         
-        // SVG header with calculated dimensions
+        // SVG header
         svgContent.push(`<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">`);
         
         // Board background
@@ -105,10 +96,10 @@ class GoBoardImageBuilder {
                 stroke="black" stroke-width="1"/>`);
         }
         
-        // Coordinate labels for the cropped section
+        // Coordinate labels
         this.addCroppedCoordinateLabels(svgContent, box);
         
-        // Star points that fall within the cropped area
+        // Star points
         const starPoints = this.getStarPoints();
         starPoints.forEach(([x, y]) => {
             if (x >= box.minX && x <= box.maxX && y >= box.minY && y <= box.maxY) {
@@ -119,10 +110,9 @@ class GoBoardImageBuilder {
         });
         
         // Stones
-        stones.forEach(({pos, color}) => {
-            const coords = this.sgfToCoords(pos);
-            const px = this.margin + (coords.x - box.minX) * this.gridSize;
-            const py = this.margin + (coords.y - box.minY) * this.gridSize;
+        stones.forEach(({x, y, color}) => {
+            const px = this.margin + (x - box.minX) * this.gridSize;
+            const py = this.margin + (y - box.minY) * this.gridSize;
             const stoneRadius = this.gridSize * 0.45;
             
             // Stone shadow
@@ -136,7 +126,7 @@ class GoBoardImageBuilder {
                 fill="${gradient}"/>`);
         });
         
-        // Gradients for stones
+        // Gradients
         svgContent.push(this.generateGradients());
         
         // Close SVG
@@ -201,6 +191,248 @@ class GoBoardImageBuilder {
     }
 }
 
+
+
+async function runBoard(client,userId,addStone = ""){
+    //simulate the board then return the stones
+
+    if(addStone !== ""){
+        await addUserActiveStone(client,userId,addStone);
+    }
+
+
+    const puzzleID = await getActivePuzzleID(client,userId);
+    const inititalStones = await getInitialStones(puzzleID);
+
+    const playerColor = await getPlayerColor(puzzleID);
+    const moveTree = await getMoveTree(puzzleID);
+
+    const userStones = await getUsersActiveStones(client,userId);
+
+    const response = await simulateMove(inititalStones.whiteStonesInital,inititalStones.blackStonesInital,
+        userStones,playerColor,moveTree
+    )
+
+    //only happens when a move was invalid
+    if(response == false){
+        removeLastUserStone(client,userId);
+        return "Invalid Move"
+    }else if(response.incorrect != undefined && response.incorrect == true){
+        if(await checkSolved(client,userId) == false){
+            incrementTries(client,userId);
+        }
+    }else if(response.correct != undefined && response.correct == true){
+        if(await checkSolved(client,userId) == false){
+            setSolved(client,userId,true);
+            incrementScore(client,userId);
+        }
+    }
+
+    return response
+}
+
+async function simulateMove(inititalWhiteStones,inititalBlackStones
+    ,playerPastMoves = [],playerColor,moveTree){
+    
+    //Wgo handles x y coords backwards so we swap them when we place the stone
+    const game = new Wgo.Game(19,"ko");
+    for(let i = 0;i < inititalWhiteStones.length; i=i+2){
+        const coord = sgfToCoords(inititalWhiteStones[i] + inititalWhiteStones[i+1]);
+        game.addStone(coord.y,coord.x,Wgo.Color.WHITE);
+    }
+
+    for(let i = 0;i < inititalBlackStones.length; i=i+2){
+        const coord = sgfToCoords(inititalBlackStones[i] + inititalBlackStones[i+1]);
+        game.addStone(coord.y,coord.x,Wgo.Color.BLACK);
+    }
+
+    //We want to pass if the playerColor dose not match the turn otherwise we will be putting down the wrong color
+    if(game.turn != playerColor){
+        game.pass();
+    }
+
+    if(playerPastMoves === undefined || playerPastMoves.length == 0){
+        return game.positionStack[0];
+    }
+
+    let state = {};
+
+    //add Players moves
+    for (let move of playerPastMoves){
+        const coord = sgfToCoords(move);
+        state = game.play(coord.y,coord.x);//have to do play instead of add so it simulates captures
+
+        //state is false if move is invalid
+        if(state == false){
+            return false
+        }
+
+        moveTree = getMoveBranch(coord.x,coord.y,moveTree);
+
+        if (moveTree.text != undefined){
+            const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+            state.text = cleanText;
+        }
+
+
+        if (moveTree === "Incorrect"){
+            state.incorrect = true;
+            return state;
+        }
+
+        if(moveTree.correct_answer != undefined && moveTree.correct_answer == true){
+            state.correct = true;
+            return state;
+        }
+
+        if(moveTree.wrong_answer != undefined && moveTree.wrong_answer == true){
+            state.incorrect = true;
+            return state;
+        }
+
+        //TODO: Some puzzles support multiple responces, this works but dose not store which option
+        //it took so it causes it to mess up in future placements
+        
+        //move up the moveTree for the response
+        // if(moveTree.branches.length > 1){
+        //     const branch = Math.floor(Math.random() * moveTree.branches.length);
+        //     moveTree = moveTree.branches[branch];
+        // }else{
+            moveTree = moveTree.branches[0];
+        // }
+        
+
+
+        state = game.play(moveTree.y,moveTree.x);
+        //save the reponse move so we can use it when talking to the player
+        state.response_move = {x : moveTree.x, y : moveTree.y};
+
+        if (moveTree.text != undefined){
+            const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+            state.text = cleanText;
+        }
+
+        if(moveTree.correct_answer != undefined && moveTree.correct_answer === true){
+            state.correct = true;
+            return state;
+        }
+
+        if(moveTree.wrong_answer != undefined && moveTree.wrong_answer === true){
+            state.incorrect = true;
+            return state;
+        }
+        // console.log(printBoard(state.grid));
+    }
+    return state;
+}
+
+//Trim the move tree to just the move the player takes
+function getMoveBranch(playerXcoord,playerYcoord,moveTree){
+    for (move of moveTree.branches){
+        if(move.x == playerXcoord && move.y == playerYcoord){
+            return move;
+        }
+    }
+    //if player places anywhere not in the move tree its incorrect
+    return "Incorrect";
+}
+
+
+
+
+//for testing
+function printBoard(array) {
+    if (array.length !== 361) {
+        console.log("Array must be exactly 361 elements");
+        return;
+    }
+
+    for (let row = 0; row < 19; row++) {
+        let line = '';
+        for (let col = 0; col < 19; col++) {
+            const index = row * 19 + col;
+            // Pad each number to be 2 characters wide (including space)
+            line += (array[index] >= 0 ? ' ' : '') + array[index] + ' ';
+        }
+        console.log(line.trim());
+    }
+}
+
+
+    // Convert SGF coordinate (e.g., "aa") to x,y coordinates
+function sgfToCoords(sgf) {
+    if (!sgf || sgf.length !== 2) return null;
+    const x = sgf.charCodeAt(0) - 'a'.charCodeAt(0);
+    const y = sgf.charCodeAt(1) - 'a'.charCodeAt(0);
+    return { x, y };
+}
+
+function wgoGridToImageStones(grid = []){
+    if (grid.length !== 361) {
+        console.log("Array must be exactly 361 elements");
+        return;
+    }
+
+    stones = []
+
+    for (let row = 0; row < 19; row++) {
+        let line = '';
+        for (let col = 0; col < 19; col++) {
+            if (grid[row * 19 + col] == 0){
+                continue;
+            }else if(grid[row * 19 + col] == 1){
+                stones.push({x : col, y : row, color: 'black'})
+            }else{
+                stones.push({x : col, y : row, color: 'white'})
+            }
+        }
+    }
+    return stones;
+
+}
+
+function standardNotationToSGF(coord){
+    if (!coord || coord.length < 2) {
+        return null;
+    }
+    
+    // Split into column letter and row number
+    const col = coord[0].toUpperCase();
+    const row = parseInt(coord.slice(1));
+    
+    // Convert column: A->a, B->b, etc.
+    // Note: SGF skips 'i' to avoid confusion
+    let sgfCol = String.fromCharCode(col.charCodeAt(0) - 'A'.charCodeAt(0) + 'a'.charCodeAt(0));
+    if (col.charCodeAt(0) >= 'I'.charCodeAt(0)) {
+        sgfCol = String.fromCharCode(sgfCol.charCodeAt(0) + 1);
+    }
+    
+    // Convert row: SGF counts from bottom-up, a=1
+    // For 19x19 board, row 19 = 'a', row 1 = 's'
+    const sgfRow = String.fromCharCode('s'.charCodeAt(0) - row + 1);
+    
+    return sgfCol + sgfRow;
+}
+
+function coordsToStandard(x, y, boardSize = 19) {
+    // Convert x coordinate (0-18) to letter (A-T, skipping I)
+    const col = String.fromCharCode('A'.charCodeAt(0) + x);
+    if (x >= 8) { // Adjust for skipping 'I'
+        col = String.fromCharCode(col.charCodeAt(0) + 1);
+    }
+    
+    // Convert y coordinate (0-18) to board position (19-1)
+    // Since 0,0 is top left, we subtract y from boardSize
+    const row = boardSize - y;
+    
+    return `${col}${row}`;
+}
+
 module.exports = {
-    GoBoardImageBuilder
+    runBoard,
+    GoBoardImageBuilder,
+    sgfToCoords,
+    wgoGridToImageStones,
+    standardNotationToSGF,
+    coordsToStandard
 }

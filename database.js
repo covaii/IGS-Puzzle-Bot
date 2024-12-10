@@ -53,8 +53,274 @@ async function ensureAllServersExist(client) {
   }
 }
 
+async function getServerName(client, guildID){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const serverColl = await clientdb.collection("servers");
+
+  const activePuzzleServer = await serverColl.findOne({
+    "serverId": guildID
+  })
+
+  return activePuzzleServer?.name;
+}
+
+async function getUsersActiveStones(client, userID) {  
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+  
+  const activePuzzle = await userColl.findOne({
+      "userId": userID,
+      "guilds.active": 1
+  }, {
+      projection: {
+          "guilds.$": 1
+      }
+  });
+  
+  return activePuzzle?.guilds?.[0]?.active_moves;
+}
+
+async function addUserActiveStone(client,userID,stoneToAdd){
+  const clientdb = client.dbconn.db("Puzzle_Bot");
+  const userColl = clientdb.collection("users");
+
+  userColl.updateOne({
+    "userId" : userID,
+    "guilds.active" : 1
+  },{
+    $push: {
+      "guilds.$.active_moves" : stoneToAdd
+    }
+  });
+}
+
+async function removeLastUserStone(client,userID){
+  const clientdb = client.dbconn.db("Puzzle_Bot");
+  const userColl = clientdb.collection("users");
+
+  userColl.updateOne({
+    "userId" : userID,
+    "guilds.active" : 1
+  },{
+    $pop: {
+      "guilds.$.active_moves" : 1
+    }
+  });
+}
+
+async function getActivePuzzleID(client, userID = "",guildID=""){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  if(userID != ""){
+
+    const userColl = await clientdb.collection("users");
+    const activePuzzle = await userColl.findOne({
+      "userId" : userID,
+      "guilds.active" : 1
+    },{
+      projection : {
+        "guilds.$" : 1
+      }
+    });
+    guildID = activePuzzle?.guilds?.[0].guildId;
+  }
+
+  const serverColl = await clientdb.collection("servers");
+
+  const activePuzzleServer = await serverColl.findOne({
+    "serverId": guildID
+  })
+
+  return activePuzzleServer?.puzzle_queue[0];
+}
+
+async function resetUserActiveMoves(client,userID){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  await userColl.updateOne(
+    { 
+        "userId" : userID,
+        "guilds.active": 1 
+    },
+    {
+        $set: {
+            "guilds.$.active_moves": []
+        }
+    }
+);
+}
+
+//sets active moves to [], tires to 0 and in progress to 0, and active to 0
+async function resetPuzzle(client, guildId) {
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  await userColl.updateMany(
+    { "guilds.guildId": guildId },
+    {
+        $set: {
+            "guilds.$.active_moves": [],
+            "guilds.$.tries": 0,
+            "guilds.$.active": 0,
+            "guilds.$.in_progress": 0,
+            "guilds.$.solved": false,
+        }
+    }
+);
+}
+
+async function getServerQueue(client,guildId){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const serverColl = await clientdb.collection("servers");
+
+  const server = await serverColl.findOne(
+    { serverId: guildId },
+  );
+  return server.puzzle_queue;
+}
+
+async function moveQueue(client,guildId){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const serverColl = await clientdb.collection("servers");
+
+  await serverColl.updateOne(
+    { serverId: guildId },
+    { $pop: { puzzle_queue: -1 } }  // -1 removes first element, 1 would remove last element
+);
+}
+
+async function getActiveServerName(client,userID){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  const activePuzzle = await userColl.findOne({
+    "userId" : userID,
+    "guilds.active" : 1
+  },{
+    projection : {
+      "guilds.$" : 1
+    }
+  });
+
+  const activeGuild = activePuzzle?.guilds?.[0].guildId;
+
+  const serverColl = await clientdb.collection("servers");
+
+  const activePuzzleServer = await serverColl.findOne({
+    "serverId": activeGuild
+  })
+
+  return activePuzzleServer?.name;
+}
+
+async function incrementTries(client,userID){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  await userColl.updateOne(
+    { 
+        "userId" : userID,
+        "guilds.active": 1 
+    },
+    {
+        $inc: {
+            "guilds.$.tries": 1
+        }
+    }
+);
+}
+
+async function incrementScore(client,userID){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  await userColl.updateOne(
+    { 
+        "userId" : userID,
+        "guilds.active": 1 
+    },
+    {
+        $inc: {
+            "guilds.$.score": 1
+        }
+    }
+);
+}
+
+async function checkSolved(client,userID){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  const activePuzzle = await userColl.findOne({
+    "userId" : userID,
+    "guilds.active" : 1
+  },{
+    projection : {
+      "guilds.$" : 1
+    }
+  });
+
+  return activePuzzle.guilds[0].solved;
+}
+
+async function setSolved(client,userID,solved = false){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const userColl = await clientdb.collection("users");
+
+  await userColl.updateOne(
+    { 
+        "userId" : userID,
+        "guilds.active": 1 
+    },
+    {
+        $set: {
+            "guilds.$.solved": solved
+        }
+    }
+);
+}
+
+async function getInProgessPuzzles(client,userID){
+  const clientdb = client.dbconn.db("Puzzle_Bot");
+  const userColl = clientdb.collection("users");
+
+  // First, find the user document
+  const user = await userColl.findOne({ userId: userID });
+
+  // Then count inprogress puzzles using chained operations:
+  const inProgressPuzzles = user?.guilds?.filter(g => g.in_progress === 1);
+
+  //get guild names of inprogress puzzles and add it to the active puzzle array
+  const serverColl = clientdb.collection("servers");
+
+  for(const item of inProgressPuzzles){
+      const guild = await serverColl.findOne({
+          serverId : item.guildId
+      });
+      item.guildName = guild.name;
+  }
+
+  return inProgressPuzzles;
+}
+
+
 
 module.exports = {
   ensureAllServersExist,
   rundb,
+  getUsersActiveStones,
+  addUserActiveStone,
+  getActivePuzzleID,
+  resetPuzzle,
+  moveQueue,
+  resetUserActiveMoves,
+  getActiveServerName,
+  getServerName,
+  removeLastUserStone,
+  incrementTries,
+  incrementScore,
+  checkSolved,
+  setSolved,
+  getServerQueue,
+  getInProgessPuzzles
 };

@@ -1,5 +1,4 @@
-const { GoBoardImageBuilder } = require("../../board.js");
-const { getPuzzle } = require("../../OGS.js");
+const { showPuzzle } = require("../../display.js");
 const { SlashCommandBuilder, Attachment } = require('discord.js');
 const fs = require('fs');
 
@@ -19,33 +18,7 @@ module.exports = {
             return;
         }
 
-        try{
-            response = await getPuzzle(id);
-        }catch(error){
-            await interaction.reply("Error getting puzzle, puzzle may be private");
-            return;
-        }
-
-        whiteStonesInital = response.data.puzzle.initial_state.white;
-        blackStonesInital = response.data.puzzle.initial_state.black;
-
-        const board = new GoBoardImageBuilder(19);
-
-        stones = [];
-        for (let i = 0; i < whiteStonesInital.length; i = i + 2){
-            stones.push({pos: whiteStonesInital[i] + whiteStonesInital[i+1], color: 'white'});
-        }
-
-        for (let i = 0; i < blackStonesInital.length; i = i + 2){
-            stones.push({pos: blackStonesInital[i] + blackStonesInital[i+1], color: 'black'});
-        }
-
-        await board.saveAsPNG(stones,interaction.id + ".png");
-
-        await interaction.reply({files : [{attachment: interaction.id + ".png"}] });
-
-        fs.unlink(interaction.id + ".png", function (err){
-            if (err) throw err;
-        });
+        await showPuzzle(interaction,id);
+        
 	},
 };

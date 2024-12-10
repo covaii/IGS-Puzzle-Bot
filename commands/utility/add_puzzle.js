@@ -1,6 +1,5 @@
 const { getPuzzle } = require("../../OGS.js");
-const { SlashCommandBuilder, Attachment } = require('discord.js');
-const fs = require('fs');
+const { SlashCommandBuilder, Attachment, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -10,7 +9,8 @@ module.exports = {
 			option
 				.setName('id')
 				.setDescription("ID of the puzzle to add to server queue")
-                .setRequired(true)),
+                .setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
 	async execute(interaction) {
         id = interaction.options.getInteger('id');
         if(isNaN(id)){
