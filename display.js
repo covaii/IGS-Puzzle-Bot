@@ -57,7 +57,6 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         }
 
 
-        console.log(text);
         const imageBuilder = new GoBoardImageBuilder(19);
 
         await imageBuilder.saveAsPNG(stones,userID + ".png");
@@ -217,8 +216,6 @@ async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
     )
 
     interaction.reply({ embeds: [embed] });
-
-    console.log(users);
 }
 
 

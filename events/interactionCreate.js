@@ -24,7 +24,7 @@ module.exports = {
 				}
 			}
 		}else if(interaction.isSelectMenu){
-			console.log(interaction);
+			// console.log(interaction);
 
 			if (interaction.customId === 'puzzle_select') {
 				await interaction.update({ content: 'Puzzle Selected!', components: [] });

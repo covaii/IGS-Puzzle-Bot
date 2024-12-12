@@ -55,7 +55,7 @@ module.exports = {
         }
         
         const inProgressPuzzles = await getInProgessPuzzles(interaction.client,interaction.user.id);
-        console.log(inProgressPuzzles);
+
         if(inProgressPuzzles.length > 1){
             //set all puzzles to inactive so they can select with the puzzle selector menu
             userColl.updateMany({ 
