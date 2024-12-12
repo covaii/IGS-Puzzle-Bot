@@ -129,11 +129,11 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
         .setTimestamp();
 
     let text = ""
-    if(role != ""){
+    if(role == "" || role == undefined || role == null){
+        await channelID.send({embeds: [embed], files: [file]});
+    }else{
         text = `${role}`;
         await channelID.send({content: text, embeds: [embed], files: [file]});
-    }else{
-        await channelID.send({embeds: [embed], files: [file]});
     }
 
 
