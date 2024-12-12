@@ -1,6 +1,6 @@
 const {runBoard, GoBoardImageBuilder, sgfToCoords, wgoGridToImageStones, standardNotationToSGF, coordsToStandard } = require("./board.js");
 const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones} = require('./OGS.js');
-const { getActivePuzzleID,getActiveServerName,getServerName } = require("./database.js");
+const { getActivePuzzleID,getActiveServerName,getServerName,getScores } = require("./database.js");
 const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder } = require("discord.js");
 const Wgo = require("wgo");
 const fs = require('fs');
@@ -198,10 +198,34 @@ async function puzzleSelectorMenu(interaction,client,userID,inProgressPuzzles){
     }
 }
 
+async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
+    const users = await getScores(client,guildID);
+
+    for (user of users){
+        user.name = await client.users.fetch(user.userId);
+        user.name = user.name.username;
+    }
+
+    const embed = new EmbedBuilder()
+    .setColor('#0099ff')
+    .setTitle('Leaderboard')
+    .setDescription(
+        users.sort((a, b) => b.score - a.score)
+        .slice(0, numOfUsersToShow)
+        .map((user, index) => `#${index + 1} ${user.name}: ${user.score}`)
+        .join('\n')
+    )
+
+    interaction.reply({ embeds: [embed] });
+
+    console.log(users);
+}
+
 
 module.exports = {
     runAndSendBoard,
     showPuzzle,
     annoucePuzzle,
-    puzzleSelectorMenu
+    puzzleSelectorMenu,
+    leaderBoard
 }

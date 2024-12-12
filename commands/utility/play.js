@@ -57,12 +57,19 @@ module.exports = {
         const inProgressPuzzles = await getInProgessPuzzles(interaction.client,interaction.user.id);
         console.log(inProgressPuzzles);
         if(inProgressPuzzles.length > 1){
+            //set all puzzles to inactive so they can select with the puzzle selector menu
+            userColl.updateMany({ 
+                "userId" : interaction.user.id,
+            }, { $set : {
+                "guilds.$[].active" : 0
+            }});
+
             await puzzleSelectorMenu(interaction,interaction.client,interaction.user.id,inProgressPuzzles);
             await interaction.reply({content: "Check direct message from the bot" ,flags : MessageFlags.Ephemeral});
-            //TODO: Set all puzzles as not active
+        
             return;
         }else{
-            await userColl.updateOne({ 
+            userColl.updateOne({ 
                     "userId" : interaction.user.id,
                     "guilds.guildId" : interaction.guildId
                 }, { $set : {

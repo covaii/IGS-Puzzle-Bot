@@ -16,15 +16,22 @@ module.exports = {
             console.log(`Received DM from ${message.author.tag}: ${message.content}`);
             if(message.content[0] == '!'){
 
-                //TODO: verify they have a active puzzle
+                //make sure they have an active puzzles
                 const puzzle = await getActivePuzzleID(message.client,message.author.id);
                 if(puzzle == undefined || puzzle == null){
                     console.log(puzzle);
                     const inProgressPuzzles = await getInProgessPuzzles(message.client,message.author.id)
                     if(inProgressPuzzles.length > 1){
+                        //set all puzzles to inactive so they can select with the puzzle selector menu
+                        userColl.updateMany({ 
+                            "userId" : interaction.user.id,
+                        }, { $set : {
+                            "guilds.active" : 0
+                        }});
+
+
                         await puzzleSelectorMenu(message,message.client,message.author.id,inProgressPuzzles);
                         return;
-                        //TODO: Set all puzzles as not active
                     }else if(inProgressPuzzles.length == 0){
                         await message.reply("You have no in-progress puzzles, please go on a server and do /play to add one");
                         return;

@@ -1,5 +1,5 @@
 const { Events, MessageFlags } = require('discord.js');
-const { runBoard } = require("../board.js");
+const { runAndSendBoard } = require('../display.js')
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -28,31 +28,17 @@ module.exports = {
 
 			if (interaction.customId === 'puzzle_select') {
 				await interaction.update({ content: 'Puzzle Selected!', components: [] });
-				//TODO: set active puzzle
-				
+				const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
+				const userColl = clientdb.collection("users");
 
+				await userColl.updateOne({ 
+                    "userId" : interaction.user.id,
+                    "guilds.guildId" : interaction.values[0]
+                }, { $set : {
+                    "guilds.$.active" : 1
+                }});
 
-				// try{
-				// 	const board = await runBoard(interaction.client,interaction.user.id);
-
-				// 	const stones = wgoGridToImageStones(board.grid);
-				// 	console.log(board);
-				// 	const imageBuilder = new GoBoardImageBuilder(19);
-		
-				// 	const user = await interaction.client.users.fetch(interaction.user.id);
-		
-				// 	await imageBuilder.saveAsPNG(stones,interaction.id + ".png");
-				// 	await user.send({files : [{attachment: interaction.id + ".png"}] });
-			
-				// 	fs.unlink(interaction.id + ".png", function (err){
-				// 		if (err) throw err;
-				// 	});
-				// 	}catch(error){
-				// 		console.log(error);
-				// 		// interaction.reply(error.message)
-				// }
-
-				
+				runAndSendBoard(interaction.client,interaction.user.id,"",true,true);
 			}
 		}
 	},

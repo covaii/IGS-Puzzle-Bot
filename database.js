@@ -303,6 +303,22 @@ async function getInProgessPuzzles(client,userID){
   return inProgressPuzzles;
 }
 
+async function getScores(client,guildID){
+  const clientdb = client.dbconn.db("Puzzle_Bot");
+  const userColl = clientdb.collection("users");
+
+  const users = await userColl.find({
+    "guilds.guildId": guildID
+  }, {
+    userId: 1,
+    "guilds.$": 1  // Returns only the matching guild element from the array
+  }).toArray();
+
+  return users.map(user => ({
+    userId: user.userId,
+    score: user.guilds[0].score  // Since we used $ projection, this will be the matching guild
+  }));
+}
 
 
 module.exports = {
@@ -322,5 +338,6 @@ module.exports = {
   checkSolved,
   setSolved,
   getServerQueue,
-  getInProgessPuzzles
+  getInProgessPuzzles,
+  getScores
 };
