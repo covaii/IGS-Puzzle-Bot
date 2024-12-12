@@ -131,8 +131,13 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
     let text = ""
     if(role != ""){
         text = `${role}`;
+        await channelID.send({content: text, embeds: [embed], files: [file]});
+    }else{
+        await channelID.send({embeds: [embed], files: [file]});
     }
-    await channelID.send({content: text, embeds: [embed], files: [file]});
+
+
+    
     
     fs.unlink(guildID + ".png", function (err){
         if (err) throw err;
