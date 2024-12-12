@@ -42,7 +42,7 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
 
         let notes = "";
         if(board.incorrect != undefined && board.incorrect == true){
-            notes = notes + ":x: Incorrect! \n do /reset to start again";
+            notes = notes + ":x: Incorrect! \n do !reset to start again";
 
         }else if(board.correct != undefined && board.correct == true){
             notes = notes + ":white_check_mark: Correct! \n";
