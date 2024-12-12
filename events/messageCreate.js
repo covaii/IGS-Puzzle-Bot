@@ -13,13 +13,13 @@ module.exports = {
                 return;
 
             // Handle DM logic here
-            console.log(`Received DM from ${message.author.tag}: ${message.content}`);
+            // console.log(`Received DM from ${message.author.tag}: ${message.content}`);
             if(message.content[0] == '!'){
 
                 //make sure they have an active puzzles
                 const puzzle = await getActivePuzzleID(message.client,message.author.id);
                 if(puzzle == undefined || puzzle == null){
-                    console.log(puzzle);
+
                     const inProgressPuzzles = await getInProgessPuzzles(message.client,message.author.id)
                     if(inProgressPuzzles.length > 1){
                         //set all puzzles to inactive so they can select with the puzzle selector menu
@@ -57,8 +57,6 @@ module.exports = {
 
                     runAndSendBoard(message.client,message.author.id);
                 }else{
-
-                    
 
                     const SGF = await standardNotationToSGF(message.content.trim().slice(1));
 

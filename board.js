@@ -42,7 +42,7 @@ class GoBoardImageBuilder {
                     quality: 80
                 })
                 .toFile(outputPath);
-            console.log(`Board saved as ${outputPath}`);
+            // console.log(`Board saved as ${outputPath}`);
         } catch (error) {
             console.error('Error converting to PNG:', error);
         }
@@ -57,7 +57,7 @@ class GoBoardImageBuilder {
                     chromaSubsampling: '4:4:4'
                 })
                 .toFile(outputPath);
-            console.log(`Board saved as ${outputPath}`);
+            // console.log(`Board saved as ${outputPath}`);
         } catch (error) {
             console.error('Error converting to JPG:', error);
         }
@@ -321,7 +321,7 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
             state.incorrect = true;
             return state;
         }
-        // console.log(printBoard(state.grid));
+
     }
     return state;
 }
@@ -404,8 +404,9 @@ function standardNotationToSGF(coord){
     // Note: SGF skips 'i' to avoid confusion
     let sgfCol = String.fromCharCode(col.charCodeAt(0) - 'A'.charCodeAt(0) + 'a'.charCodeAt(0));
     if (col.charCodeAt(0) >= 'I'.charCodeAt(0)) {
-        sgfCol = String.fromCharCode(sgfCol.charCodeAt(0) + 1);
+        sgfCol = String.fromCharCode(sgfCol.charCodeAt(0) - 1);
     }
+
     
     // Convert row: SGF counts from bottom-up, a=1
     // For 19x19 board, row 19 = 'a', row 1 = 's'
@@ -416,7 +417,7 @@ function standardNotationToSGF(coord){
 
 function coordsToStandard(x, y, boardSize = 19) {
     // Convert x coordinate (0-18) to letter (A-T, skipping I)
-    const col = String.fromCharCode('A'.charCodeAt(0) + x);
+    let col = String.fromCharCode('A'.charCodeAt(0) + x);
     if (x >= 8) { // Adjust for skipping 'I'
         col = String.fromCharCode(col.charCodeAt(0) + 1);
     }
