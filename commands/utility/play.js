@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, userMention, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, userMention, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, InteractionContextType } = require('discord.js');
 const { runBoard, wgoGridToImageStones, GoBoardImageBuilder } = require("../../board.js");
 const { runAndSendBoard, puzzleSelectorMenu } = require("../../display.js");
 const {getInProgessPuzzles} = require("../../database.js");

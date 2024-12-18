@@ -1,5 +1,5 @@
 const { getPuzzle } = require("../../OGS.js");
-const { SlashCommandBuilder, Attachment, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, Attachment, PermissionFlagsBits,  InteractionContextType } = require('discord.js');
 const { annoucePuzzle } = require('../../display.js');
 
 module.exports = {

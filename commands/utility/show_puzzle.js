@@ -1,5 +1,5 @@
 const { showPuzzle } = require("../../display.js");
-const { SlashCommandBuilder, Attachment } = require('discord.js');
+const { SlashCommandBuilder, Attachment, InteractionContextType } = require('discord.js');
 const fs = require('fs');
 
 module.exports = {

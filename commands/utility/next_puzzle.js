@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits,  InteractionContextType } = require('discord.js');
 const { resetPuzzle, moveQueue,getServerQueue } = require("../../database.js")
 
 module.exports = {

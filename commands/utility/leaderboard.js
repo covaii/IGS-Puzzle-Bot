@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder,  InteractionContextType } = require('discord.js');
 const { leaderBoard } = require('../../display.js')
 
 module.exports = {
