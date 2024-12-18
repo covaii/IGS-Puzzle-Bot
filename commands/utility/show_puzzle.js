@@ -10,7 +10,8 @@ module.exports = {
 			option
 				.setName('id')
 				.setDescription("ID of the puzzle to show")
-                .setRequired(true)),
+                .setRequired(true))
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         id = interaction.options.getInteger('id');
         if(isNaN(id)){

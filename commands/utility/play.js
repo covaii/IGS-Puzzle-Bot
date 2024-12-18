@@ -7,7 +7,8 @@ const {getInProgessPuzzles} = require("../../database.js");
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('play')
-		.setDescription('Allows you to play this puzzle'),
+		.setDescription('Allows you to play this puzzle')
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
         const userColl = clientdb.collection("users");

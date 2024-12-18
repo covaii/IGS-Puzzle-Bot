@@ -5,7 +5,8 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('next_puzzle')
 		.setDescription('Move the server to next puzzle in the queue. This will remove the current puzzle')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         const queue = await getServerQueue(interaction.client,interaction.guildId);
 

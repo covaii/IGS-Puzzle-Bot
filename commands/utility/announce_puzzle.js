@@ -16,7 +16,8 @@ module.exports = {
 				.setName('role')
 				.setDescription("Role to ping about the annoucment"))
         
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
+		.setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         annoucePuzzle(interaction.client,interaction.guild.id,interaction.options.getChannel('channel'),interaction.options.getRole('role'));
 

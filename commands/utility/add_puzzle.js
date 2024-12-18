@@ -10,7 +10,8 @@ module.exports = {
 				.setName('id')
 				.setDescription("ID of the puzzle to add to server queue")
                 .setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         id = interaction.options.getInteger('id');
         if(isNaN(id)){
