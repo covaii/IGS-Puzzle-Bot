@@ -206,8 +206,8 @@ async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
     const users = await getScores(client,guildID);
 
     for (user of users){
-        user.name = await client.users.fetch(user.userId);
-        user.name = user.name.username;
+        const member = await interaction.guild.members.fetch(user.userId);
+        user.name = member.displayName;
     }
 
     const embed = new EmbedBuilder()
