@@ -1,14 +1,12 @@
 
 //Auto Generated from MongoDB Atlas
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const {dbUser , dbPass} = require('./config.json');
-
-const uri  = "mongodb+srv://" + dbUser + ":" + dbPass + "@cluster0.ya4ae.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const {dbConnString} = require('./config.json');
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 
 
 async function rundb() {
-  const dbclient = new MongoClient(uri, {
+  const dbclient = new MongoClient(dbConnString, {
     serverApi: {
       version: ServerApiVersion.v1,
       strict: true,

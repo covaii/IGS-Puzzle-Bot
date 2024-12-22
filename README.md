@@ -41,8 +41,7 @@ npm install
     "discord_token": "your-discord-token",
     "discord_clientId": "your-client-id",
     "discord_guildId": "your-guild-id",
-    "dbUser": "your-mongodb-user",
-    "dbPass": "your-mongodb-password"
+    "dbConnString": "your-mongodb-conn-string"
 }
 ```
 
