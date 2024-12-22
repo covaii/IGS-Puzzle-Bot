@@ -85,14 +85,14 @@ class GoBoardImageBuilder {
             const x = this.margin + (i - box.minX) * this.gridSize;
             svgContent.push(`<line 
                 x1="${x}" y1="${this.margin}" 
-                x2="${x}" y2="${svgHeight - this.margin}" 
+                x2="${x}" y2="${svgHeight - (this.margin + this.gridSize)}" 
                 stroke="black" stroke-width="1"/>`);
         }
         for (let i = box.minY; i <= box.maxY; i++) {
             const y = this.margin + (i - box.minY) * this.gridSize;
             svgContent.push(`<line 
                 x1="${this.margin}" y1="${y}" 
-                x2="${svgWidth - this.margin}" y2="${y}" 
+                x2="${svgWidth - (this.margin + this.gridSize)}" y2="${y}" 
                 stroke="black" stroke-width="1"/>`);
         }
         
