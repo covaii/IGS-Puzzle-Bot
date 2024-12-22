@@ -5,7 +5,7 @@ A Discord bot for practicing Go (Baduk/Weiqi) puzzles from the Online Go Server 
 ## Commands
 
 ### Admin Commands
-- `/add_puzzle [id]` - Add an OGS puzzle to the server queue
+- `/add_puzzle [id] [position]` - Add an OGS puzzle to the server queue
 - `/announce_puzzle [channel] [role?]` - Announce the current puzzle in a specific channel
 - `/next_puzzle` - Move to the next puzzle in the queue
 
