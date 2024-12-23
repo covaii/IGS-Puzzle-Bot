@@ -177,6 +177,16 @@ async function getServerQueue(client,guildId){
   return server.puzzle_queue;
 }
 
+async function getServerApprovedCollections(client,guildId){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const serverColl = await clientdb.collection("servers");
+
+  const server = await serverColl.findOne(
+    { serverId: guildId },
+  );
+  return server.approved_collections;
+}
+
 async function moveQueue(client,guildId){
   const clientdb = await client.dbconn.db("Puzzle_Bot");
   const serverColl = await clientdb.collection("servers");
@@ -337,5 +347,6 @@ module.exports = {
   setSolved,
   getServerQueue,
   getInProgessPuzzles,
-  getScores
+  getScores,
+  getServerApprovedCollections
 };
