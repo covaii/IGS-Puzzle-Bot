@@ -1,5 +1,5 @@
 const { showPuzzle } = require("../../display.js");
-const { SlashCommandBuilder, Attachment } = require('discord.js');
+const { SlashCommandBuilder, Attachment, InteractionContextType } = require('discord.js');
 const fs = require('fs');
 
 module.exports = {
@@ -10,7 +10,8 @@ module.exports = {
 			option
 				.setName('id')
 				.setDescription("ID of the puzzle to show")
-                .setRequired(true)),
+                .setRequired(true))
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         id = interaction.options.getInteger('id');
         if(isNaN(id)){

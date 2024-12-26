@@ -1,12 +1,12 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { nextPuzzle } = require("../../database.js")
-const { getAllPuzzlesInCollection } = require("../../OGS.js")
+const { SlashCommandBuilder, PermissionFlagsBits,  InteractionContextType } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('next_puzzle')
 		.setDescription('Move the server to next puzzle in the queue. This will remove the current puzzle')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
 		try{
         	const response = await nextPuzzle(interaction.client,interaction.guildId);

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, userMention, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, userMention, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, InteractionContextType } = require('discord.js');
 const { runBoard, wgoGridToImageStones, GoBoardImageBuilder } = require("../../board.js");
 const { runAndSendBoard, puzzleSelectorMenu } = require("../../display.js");
 const {getInProgessPuzzles} = require("../../database.js");
@@ -7,7 +7,8 @@ const {getInProgessPuzzles} = require("../../database.js");
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('play')
-		.setDescription('Allows you to play this puzzle'),
+		.setDescription('Allows you to play this puzzle')
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
         const userColl = clientdb.collection("users");
