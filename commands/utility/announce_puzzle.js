@@ -20,7 +20,8 @@ module.exports = {
 		.setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
 		const channelId = interaction.options.getChannel('channel').id;
-        annoucePuzzle(interaction.client,interaction.guild.id,channelId,interaction.options.getRole('role'));
+		const roleId = interaction.options.getRole('role').id;
+        annoucePuzzle(interaction.client,interaction.guild.id,channelId,roleId);
 
         await interaction.reply("Annocument Made");
 	},
