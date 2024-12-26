@@ -18,7 +18,8 @@ module.exports = {
                     { name: 'Next', value: 'next' },
                     { name: 'Last', value: 'last' },)
                 .setRequired(false))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         id = interaction.options.getInteger('id');
                 const position = interaction.options.getString('position');

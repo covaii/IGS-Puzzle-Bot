@@ -2,12 +2,91 @@
 
 A Discord bot for practicing Go (Baduk/Weiqi) puzzles from the Online Go Server (OGS). This bot helps server administrators manage and share Go puzzles with their community members, tracks user progress, and maintains a leaderboard.
 
-## Commands
+## Usage
 
 ### Admin Commands
 - `/add_puzzle [id] [position]` - Add an OGS puzzle to the server queue
 - `/announce_puzzle [channel] [role?]` - Announce the current puzzle in a specific channel
 - `/next_puzzle` - Move to the next puzzle in the queue
+- `/add_collection [Collection Name]` Adds a puzzle collection to the approved collection list. This list will be used to randomly get a puzzle if the puzzle queue is empty
+
+# Scheduling Puzzles
+
+The bot supports automatic puzzle advancement with optional announcements. Server administrators can set up schedules in several ways using the `/schedule_puzzle` command.
+
+## Basic Usage
+
+### Daily Scheduling
+Schedule puzzles to advance every day at midnight:
+```
+/schedule_puzzle daily
+  [channel:#puzzles]  Optional: Channel to announce new puzzles
+  [role:@puzzlers]    Optional: Role to ping for announcements
+```
+
+### Weekly Scheduling
+Schedule puzzles to advance every Sunday at midnight:
+```
+/schedule_puzzle weekly
+  [channel:#puzzles]  Optional: Channel to announce new puzzles
+  [role:@puzzlers]    Optional: Role to ping for announcements
+```
+
+### Custom Scheduling
+Set a custom schedule using cron expression:
+```
+/schedule_puzzle custom
+  cron:"0 0 * * *"   Required: Cron expression for scheduling
+  [channel:#puzzles]  Optional: Channel to announce new puzzles
+  [role:@puzzlers]    Optional: Role to ping for announcements
+```
+
+### Turn Off Scheduling
+```
+/schedule_puzzle off
+```
+
+## Cron Expression Guide
+
+For custom scheduling, you'll need to provide a cron expression. Here's the format:
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday=0)
+│ │ │ │ │
+* * * * *
+```
+
+Common Examples:
+- `0 0 * * *` - Every day at midnight
+- `0 12 * * *` - Every day at noon
+- `0 0 * * 0` - Every Sunday at midnight
+- `0 8 * * 1-5` - Every weekday at 8 AM
+- `0 */6 * * *` - Every 6 hours
+
+## Puzzle Queue Behavior
+
+When a scheduled advancement occurs:
+1. If there are puzzles in the queue, the bot will move to the next puzzle
+2. If the queue is empty or has only one puzzle remaining, the bot will:
+   - Check approved puzzle collections
+   - Randomly select a new puzzle from these collections
+   - Add it to the queue
+   - Move to the new puzzle
+
+## Announcements
+
+Announcements are optional. You can:
+- Schedule without announcements by not specifying a channel
+- Schedule with announcements by specifying a channel
+- Schedule with announcements and role pings by specifying both channel and role
+
+The announcement will include:
+- The new puzzle details
+- Visual representation of the puzzle
+- Role ping (if configured)
 
 ### User Commands
 - `/play` - Start solving the current puzzle
