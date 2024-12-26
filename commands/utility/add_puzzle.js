@@ -4,16 +4,26 @@ const { SlashCommandBuilder, Attachment, PermissionFlagsBits, InteractionContext
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('add_puzzle')
-		.setDescription('Displays a image of the puzzle with the given ID')
+		.setDescription('Adds Puzzle to the server queue')
         .addIntegerOption(option => 
 			option
 				.setName('id')
 				.setDescription("ID of the puzzle to add to server queue")
                 .setRequired(true))
+        .addStringOption(option => 
+            option
+                .setName('position')
+                .setDescription("Sets the position in the queue for the puzzle to go, defaults to End")
+                .addChoices(
+                    { name: 'Next', value: 'next' },
+                    { name: 'Last', value: 'last' },)
+                .setRequired(false))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
         .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
         id = interaction.options.getInteger('id');
+                const position = interaction.options.getString('position');
+
         if(isNaN(id)){
             await interaction.reply("Id must be a number");
             return;
@@ -28,14 +38,31 @@ module.exports = {
 
         const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
         const coll = clientdb.collection("servers");
-        await coll.updateOne(
-            {serverId : interaction.guild.id},
-            {
-                $push: {
-                    puzzle_queue: id
+
+        if (position === 'next') {
+            // Add to beginning of queue
+            await coll.updateOne(
+                {serverId : interaction.guild.id},
+                {
+                    $push: {
+                        puzzle_queue: {
+                            $each: [id],
+                            $position: 1  // Position 1 puts it after current puzzle
+                        }
+                    }
                 }
-            }
-        )
+            );
+        } else {
+            // Add to end of  defualt behavior
+            await coll.updateOne(
+                {serverId : interaction.guild.id},
+                {
+                    $push: {
+                        puzzle_queue: id
+                    }
+                }
+            );
+        }
 
         await interaction.reply("Puzzle: " + id + " successfully added to queue!");
 	},

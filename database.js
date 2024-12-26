@@ -1,14 +1,13 @@
 
 //Auto Generated from MongoDB Atlas
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const {dbUser , dbPass} = require('./config.json');
-
-const uri  = "mongodb+srv://" + dbUser + ":" + dbPass + "@cluster0.ya4ae.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const {dbConnString} = require('./config.json');
+const { getAllPuzzlesInCollection } = require('./OGS.js')
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 
 
 async function rundb() {
-  const dbclient = new MongoClient(uri, {
+  const dbclient = new MongoClient(dbConnString, {
     serverApi: {
       version: ServerApiVersion.v1,
       strict: true,
@@ -179,6 +178,16 @@ async function getServerQueue(client,guildId){
   return server.puzzle_queue;
 }
 
+async function getServerApprovedCollections(client,guildId){
+  const clientdb = await client.dbconn.db("Puzzle_Bot");
+  const serverColl = await clientdb.collection("servers");
+
+  const server = await serverColl.findOne(
+    { serverId: guildId },
+  );
+  return server.approved_collections;
+}
+
 async function moveQueue(client,guildId){
   const clientdb = await client.dbconn.db("Puzzle_Bot");
   const serverColl = await clientdb.collection("servers");
@@ -321,6 +330,50 @@ async function getScores(client,guildID){
 }
 
 
+async function nextPuzzle(client,guildId){
+  const queue = await getServerQueue(client,guildId);
+
+  if(queue.length <= 1){
+    const approvedCollections = await getServerApprovedCollections(client,guildId);
+    if(approvedCollections == null || approvedCollections.length == 0){
+        throw new Error("Not another puzzle in queue! Please add one with /add_puzzle, or add a back-up collection with" +
+            "/add_collection");
+    }
+    
+    collectionId = approvedCollections[Math.floor(Math.random() * approvedCollections.length)];
+    const puzzles = await getAllPuzzlesInCollection(collectionId);
+
+    const puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+
+    const clientdb = client.dbconn.db("Puzzle_Bot");
+    const coll = clientdb.collection("servers");
+
+    await coll.updateOne(
+        {serverId : guildId},
+        {
+            $push: {
+                puzzle_queue: puzzle.id
+            }
+        }
+    );
+
+    resetPuzzle(client,guildId);
+
+    //edge case
+    if(queue.length >= 1){
+        moveQueue(client,guildId);
+    }
+    
+    return "No puzzles in queue; using random approved collection!";
+  }
+  
+  resetPuzzle(client,guildId);
+  moveQueue(client,guildId);
+
+  return "Server moved to next puzzle!";
+}
+
+
 module.exports = {
   ensureAllServersExist,
   rundb,
@@ -339,5 +392,7 @@ module.exports = {
   setSolved,
   getServerQueue,
   getInProgessPuzzles,
-  getScores
+  getScores,
+  getServerApprovedCollections,
+  nextPuzzle
 };

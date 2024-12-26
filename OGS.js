@@ -7,6 +7,24 @@ async function getPuzzle(id){
     return response;
 }
 
+async function getPuzzleCollection(name = ""){
+    name = encodeURIComponent(name);
+    response = await axios.get("https://online-go.com/api/v1/puzzles/collections?name=" + name);
+    return response
+}
+
+async function getAllPuzzlesInCollection(collectionId){
+    let i = 1;
+    let puzzles = [];
+    let response = {};
+    do{
+        response = await axios.get("https://online-go.com/api/v1/puzzles?collection=" + collectionId + "&page_size=50&page=" + i);
+        puzzles.push(... response.data.results);
+        i++;
+    }while(response.data.count > (50 * (i- 1)));
+    return puzzles;
+}
+
 async function getInitialStones(puzzleID){
     try{
         response = await getPuzzle(puzzleID);
@@ -73,11 +91,15 @@ async function getPuzzleDiscription(puzzleID){
 
 
 
+
+
 module.exports = {
     getPuzzle,
     getInitialStones,
     getPlayerColor,
     getMoveTree,
     getPuzzleAuthor,
-    getPuzzleDiscription
+    getPuzzleDiscription,
+    getPuzzleCollection,
+    getAllPuzzlesInCollection
 };

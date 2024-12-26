@@ -1,5 +1,5 @@
+const { nextPuzzle } = require("../../database.js")
 const { SlashCommandBuilder, PermissionFlagsBits,  InteractionContextType } = require('discord.js');
-const { resetPuzzle, moveQueue,getServerQueue } = require("../../database.js")
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -8,16 +8,12 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
         .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
-        const queue = await getServerQueue(interaction.client,interaction.guildId);
-
-        if(queue.length <= 1){
-            await interaction.reply("Not another puzzle in queue! Please add one with /add_puzzle, then run this command again");
-            return;
-        }
-        
-        resetPuzzle(interaction.client,interaction.guild.id);
-        moveQueue(interaction.client,interaction.guild.id);
-
-        await interaction.reply("Server moved to next puzzle!");
+		try{
+        	const response = await nextPuzzle(interaction.client,interaction.guildId);
+		}catch(error){
+			await interaction.reply(error.message);
+			return;
+		}
+        await interaction.reply(response);
 	},
 };
