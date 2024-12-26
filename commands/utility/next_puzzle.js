@@ -8,8 +8,9 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
         .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
+		let response = {};
 		try{
-        	const response = await nextPuzzle(interaction.client,interaction.guildId);
+        	response = await nextPuzzle(interaction.client,interaction.guildId);
 		}catch(error){
 			await interaction.reply(error.message);
 			return;
