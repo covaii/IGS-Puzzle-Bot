@@ -19,7 +19,7 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
 		.setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
-		const channelId = interaction.options.getChannel('channel').systemChannelId;
+		const channelId = interaction.options.getChannel('channel').id;
         annoucePuzzle(interaction.client,interaction.guild.id,channelId,interaction.options.getRole('role'));
 
         await interaction.reply("Annocument Made");

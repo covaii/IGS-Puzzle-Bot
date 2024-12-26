@@ -144,7 +144,6 @@ module.exports = {
 
         }
 
-        console.log(cronExpression);
         // Create the scheduled job
         interaction.client.scheduledJobs = interaction.client.scheduledJobs || {};
         interaction.client.scheduledJobs[guildId] = schedule.scheduleJob(cronExpression, async () => {
