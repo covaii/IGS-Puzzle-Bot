@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const schedule = require('node-schedule');
+const cronValidator = require('cron-validator');
 const {annoucePuzzle} = require("../../display.js")
-const { getServerQueue, resetPuzzle, moveQueue } = require("../../database.js");
-const { getServerApprovedCollections, getAllPuzzlesInCollection } = require("../../OGS.js");
+const {nextPuzzle } = require("../../database.js");
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -65,7 +66,7 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         const guildId = interaction.guildId;
         const channel = interaction.options.getChannel('channel');
-        const role = interaction.options.getRole('role');
+        let role = interaction.options.getRole('role');
 
         // Get the database connection
         const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
@@ -90,18 +91,16 @@ module.exports = {
                 break;
             case 'custom':
                 const customCron = interaction.options.getString('cron');
-                try {
-                    // Validate the cron expression by attempting to schedule a job
-                    schedule.scheduleJob(customCron, () => {});
-                    cronExpression = customCron;
-                    scheduleDescription = `custom schedule: ${customCron}`;
-                } catch (error) {
+                
+                if (!cronValidator.isValidCron(customCron)) {
                     await interaction.reply({
                         content: 'Error: Invalid cron expression. Please use valid cron syntax.',
                         ephemeral: true
                     });
                     return;
                 }
+                    cronExpression = customCron;
+                    scheduleDescription = "Custom schedule: `" + customCron + "`";
                 break;
             case 'off':
                 // Update database to remove scheduling
@@ -127,9 +126,15 @@ module.exports = {
 
             if (channel) {
                 updateDoc.announcementChannel = channel.id;
+            }else{
+                updateDoc.announcementChannel = "";
             }
+
             if (role) {
                 updateDoc.announcementRole = role.id;
+                role = role.id;
+            }else{
+                updateDoc.announcementRole = "";
             }
 
             await serverColl.updateOne(
@@ -139,58 +144,25 @@ module.exports = {
 
         }
 
+        console.log(cronExpression);
         // Create the scheduled job
         interaction.client.scheduledJobs = interaction.client.scheduledJobs || {};
         interaction.client.scheduledJobs[guildId] = schedule.scheduleJob(cronExpression, async () => {
-
-            //next puzzle code
-            const queue = await getServerQueue(interaction.client,interaction.guildId);
-
-            if(queue.length <= 1){
-                const approvedCollections = await getServerApprovedCollections(interaction.client,interaction.guildId);
-                if(approvedCollections.length == 0){
-                    console.error("No puzzle in queue and no backup collections");
-                    return;
-                }
-                
-
-                collectionId = approvedCollections[Math.floor(Math.random() * approvedCollections.length)];
-                const puzzles = await getAllPuzzlesInCollection(collectionId);
-
-                const puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
-
-                const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
-                const coll = clientdb.collection("servers");
-
-                await coll.updateOne(
-                    {serverId : interaction.guild.id},
-                    {
-                        $push: {
-                            puzzle_queue: puzzle.id
-                        }
-                    }
-                );
-
-                resetPuzzle(interaction.client,interaction.guild.id);
-
-                //edge case
-                if(queue.length >= 1){
-                    moveQueue(interaction.client,interaction.guild.id);
-                }
+            try{
+                nextPuzzle(interaction.client,interaction.guildId);
+            }catch(error){
+                console.error("Server: " + interaction.guild.name + " Has no queue or approved collections at scheduled time");
                 return;
             }
-            
-            resetPuzzle(interaction.client,interaction.guild.id);
-            moveQueue(interaction.client,interaction.guild.id);
 
-            //annoucment Code
-            
+            if (channel == "" || channel == undefined || channel == null){
+                return;
+            }
 
-            annoucePuzzle()
+            annoucePuzzle(interaction.client,interaction.guildId,channel.id,role);
+        });
 
-        })
-
-        console.log(interaction.client.scheduledJobs);
-        await interaction.reply("test");
+        // console.log(test);
+        await interaction.reply(scheduleDescription);
     },
 };
