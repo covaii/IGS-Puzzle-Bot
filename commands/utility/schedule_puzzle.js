@@ -148,7 +148,7 @@ module.exports = {
         interaction.client.scheduledJobs = interaction.client.scheduledJobs || {};
         interaction.client.scheduledJobs[guildId] = schedule.scheduleJob(cronExpression, async () => {
             try{
-                nextPuzzle(interaction.client,interaction.guildId);
+                await nextPuzzle(interaction.client,interaction.guildId);
             }catch(error){
                 console.error("Server: " + interaction.guild.name + " Has no queue or approved collections at scheduled time");
                 return;
