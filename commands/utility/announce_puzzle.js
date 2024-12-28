@@ -20,7 +20,12 @@ module.exports = {
 		.setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
 		const channelId = interaction.options.getChannel('channel').id;
-		const roleId = interaction.options.getRole('role').id;
+		const role = interaction.options.getRole('role');
+		let roleId= "";
+		if(role){
+			roleId = role.id;
+		}
+
         annoucePuzzle(interaction.client,interaction.guild.id,channelId,roleId);
 
         await interaction.reply("Annocument Made");
