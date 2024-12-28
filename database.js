@@ -361,14 +361,14 @@ async function nextPuzzle(client,guildId){
 
     //edge case
     if(queue.length >= 1){
-        moveQueue(client,guildId);
+        await moveQueue(client,guildId);
     }
     
     return "No puzzles in queue; using random approved collection!";
   }
   
   resetPuzzle(client,guildId);
-  moveQueue(client,guildId);
+  await moveQueue(client,guildId);
 
   return "Server moved to next puzzle!";
 }
