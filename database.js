@@ -316,17 +316,21 @@ async function getScores(client,guildID){
   const clientdb = client.dbconn.db("Puzzle_Bot");
   const userColl = clientdb.collection("users");
 
-  const users = await userColl.find({
-    "guilds.guildId": guildID
-  }, {
-    userId: 1,
-    "guilds.$": 1  // Returns only the matching guild element from the array
-  }).toArray();
+  const userArray =  await userColl.aggregate([
+    // Unwind the guilds array to work with individual guild documents
+    { $unwind: "$guilds" },
+    
+    // Match only the specific guild we want
+    { $match: { "guilds.guildId": guildID } },
+    
+    // Project only the fields we need
+    { $project: {
+        userId: 1,
+        score: "$guilds.score"
+    }}
+  ]).toArray();
 
-  return users.map(user => ({
-    userId: user.userId,
-    score: user.guilds[0].score  // Since we used $ projection, this will be the matching guild
-  }));
+  return userArray;
 }
 
 
