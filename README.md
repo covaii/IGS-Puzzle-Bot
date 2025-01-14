@@ -2,6 +2,12 @@
 
 A Discord bot for practicing Go (Baduk/Weiqi) puzzles from the Online Go Server (OGS). This bot helps server administrators manage and share Go puzzles with their community members, tracks user progress, and maintains a leaderboard.
 
+# Adding It To A Server
+
+If you would like to add the bot to your server, I (skwidder or dontdiehard) on discord, am hosting it and you can use this link to add it https://discord.com/oauth2/authorize?client_id=1313256722659541052
+
+or feel free to self host.
+
 ## Usage
 
 ### Admin Commands
