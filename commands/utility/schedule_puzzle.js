@@ -60,7 +60,8 @@ module.exports = {
             subcommand
                 .setName('off')
                 .setDescription('Turn off scheduled advancement'))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .setContexts(InteractionContextType.Guild),
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
