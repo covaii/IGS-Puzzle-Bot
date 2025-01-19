@@ -1,5 +1,5 @@
 const { getPuzzleCollection } = require("../../OGS.js");
-const { SlashCommandBuilder, Attachment, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, Attachment, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const schedule = require('node-schedule');
 const cronValidator = require('cron-validator');
 const {annoucePuzzle} = require("../../display.js")
