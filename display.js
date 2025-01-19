@@ -204,6 +204,7 @@ async function puzzleSelectorMenu(interaction,client,userID,inProgressPuzzles){
 }
 
 async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
+    await interaction.deferReply();
     const users = await getScores(client,guildID);
 
     for (user of users){
@@ -221,7 +222,7 @@ async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
         .join('\n')
     )
 
-    interaction.reply({ embeds: [embed] });
+    interaction.editReply({ embeds: [embed] });
 }
 
 
