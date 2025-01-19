@@ -46,7 +46,8 @@ async function ensureAllServersExist(client) {
       await serversCollection.insertOne({
         'serverId' : guild.id,
         'name' : guild.name,  
-        'puzzle_queue' : []
+        'puzzle_queue' : [],
+        'approved_collections': []
       });
     }
   }

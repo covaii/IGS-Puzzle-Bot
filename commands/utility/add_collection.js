@@ -1,5 +1,5 @@
 const { getPuzzleCollection } = require("../../OGS.js");
-const { SlashCommandBuilder, Attachment, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, Attachment, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -10,7 +10,8 @@ module.exports = {
 				.setName('collection')
 				.setDescription("The name of the OGS collection to add")
                 .setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ModerateMembers)
+        .setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
 
         try{

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const schedule = require('node-schedule');
 const cronValidator = require('cron-validator');
 const {annoucePuzzle} = require("../../display.js")
@@ -60,7 +60,8 @@ module.exports = {
             subcommand
                 .setName('off')
                 .setDescription('Turn off scheduled advancement'))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .setContexts(InteractionContextType.Guild),
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
