@@ -155,8 +155,15 @@ async function getPuzzleDetails(puzzleID) {
         inline: true
     });
 
+    //Discord Embed dose not allow a feild to be longer than 1024 characters,
+    //so if the description is longer than that lets just set it to nothing
+    let description = await getPuzzleDiscription(puzzleID) + "\n\n";
+    if(description.length > 1024){
+        return feilds;
+    }
+
     feilds.push({
-        name: "Discription",
+        name: "Description",
         value: await getPuzzleDiscription(puzzleID) + "\n\n",
         inline: true
     });
