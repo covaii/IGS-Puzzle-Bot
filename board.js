@@ -341,6 +341,10 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
 
         moveTree = getMoveBranch(coord.x,coord.y,moveTree);
 
+        if(moveTree.marks != undefined){
+            state.marks = moveTree.marks;
+        }
+
         if (moveTree.text != undefined){
             const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
             state.text = cleanText;
@@ -378,6 +382,10 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
         //save the reponse move so we can use it when talking to the player
         state.response_move = {x : moveTree.x, y : moveTree.y};
 
+        if(moveTree.marks != undefined){
+            state.marks = moveTree.marks;
+        }
+
         if (moveTree.text != undefined){
             const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
             state.text = cleanText;
@@ -393,10 +401,6 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
             return state;
         }
 
-    }
-
-    if(moveTree.marks != undefined){
-        state.marks = moveTree.marks;
     }
     
     return state;
