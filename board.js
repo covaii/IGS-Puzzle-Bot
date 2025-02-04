@@ -10,31 +10,35 @@ const Wgo = require("wgo");
 class GoBoardImageBuilder {
     constructor(size = 19) {
         this.size = size;
-        this.boardSize = 400; // pixels
-        this.margin = 40; // margin for labels
+        this.boardSize = 800; // pixels
+        this.margin = 50; // margin for labels
         this.gridSize = (this.boardSize - 2 * this.margin) / (this.size - 1);
     }
 
-    calculateBoundingBox(stones, padding = 1) {
+    calculateBoundingBox(stones, marks = [], padding = 1) {
         if (stones.length === 0) return null;
 
-        // Always include top-left corner
-        let minX = 0;
-        let minY = 0;
-        
-        // Find max coordinates
-        let maxX = Math.max(...stones.map(stone => stone.x));
-        let maxY = Math.max(...stones.map(stone => stone.y));
+        const minX = Math.min(...stones.map(stone => stone.x), ...marks.map(mark => mark.x));
+        const maxX = Math.max(...stones.map(stone => stone.x), ...marks.map(mark => mark.x));
+        const minY = Math.min(...stones.map(stone => stone.y), ...marks.map(mark => mark.y));
+        const maxY = Math.max(...stones.map(stone => stone.y), ...marks.map(mark => mark.y));
 
-        // Add padding (only to max values since min values are fixed at 0)
-        maxX = Math.min(this.size - 1, maxX + padding);
-        maxY = Math.min(this.size - 1, maxY + padding);
+        // Check if closer to left or right edge
+        //MinX is distance from left edge, size - 1 - maxX is distance from right edge
+        const anchorLeft = minX < (this.size - 1 - maxX);
+        // Check if closer to top or bottom edge
+        const anchorTop = minY < (this.size - 1 - maxY);
 
-        return { minX, maxX, minY, maxY };
+        return {
+            minX: anchorLeft ? 0 : Math.max(0, minX - padding),
+            maxX: anchorLeft ? Math.min(this.size - 1, maxX + padding) : this.size - 1,
+            minY: anchorTop ? 0 : Math.max(0, minY - padding),
+            maxY: anchorTop ? Math.min(this.size - 1, maxY + padding) : this.size - 1
+        };
     }
 
-    async saveAsPNG(stones = [], outputPath = 'goboard.png', padding = 2) {
-        const svgContent = this.generateSVG(stones, padding);
+    async saveAsPNG(stones = [],marks = [], outputPath = 'goboard.png', padding = 1) {
+        const svgContent = this.generateSVG(stones, marks, padding);
         try {
             await sharp(Buffer.from(svgContent))
                 .png({
@@ -48,23 +52,9 @@ class GoBoardImageBuilder {
         }
     }
 
-    async saveAsJPG(stones = [], outputPath = 'goboard.jpg', padding = 2) {
-        const svgContent = this.generateSVG(stones, padding);
-        try {
-            await sharp(Buffer.from(svgContent))
-                .jpeg({
-                    quality: 80,
-                    chromaSubsampling: '4:4:4'
-                })
-                .toFile(outputPath);
-            // console.log(`Board saved as ${outputPath}`);
-        } catch (error) {
-            console.error('Error converting to JPG:', error);
-        }
-    }
+    generateSVG(stones = [], marks = [], padding = 1) {
 
-    generateSVG(stones = [], padding = 2) {
-        const box = this.calculateBoundingBox(stones, padding);
+        const box = this.calculateBoundingBox(stones, marks , padding);
         // if (!box) return this.generateFullBoardSVG(stones);
 
         const width = box.maxX - box.minX + 1;
@@ -86,14 +76,14 @@ class GoBoardImageBuilder {
             svgContent.push(`<line 
                 x1="${x}" y1="${this.margin}" 
                 x2="${x}" y2="${svgHeight - (this.margin + this.gridSize)}" 
-                stroke="black" stroke-width="1"/>`);
+                stroke="black" stroke-width="2"/>`);
         }
         for (let i = box.minY; i <= box.maxY; i++) {
             const y = this.margin + (i - box.minY) * this.gridSize;
             svgContent.push(`<line 
                 x1="${this.margin}" y1="${y}" 
                 x2="${svgWidth - (this.margin + this.gridSize)}" y2="${y}" 
-                stroke="black" stroke-width="1"/>`);
+                stroke="black" stroke-width="2"/>`);
         }
         
         // Coordinate labels
@@ -125,9 +115,79 @@ class GoBoardImageBuilder {
             svgContent.push(`<circle cx="${px}" cy="${py}" r="${stoneRadius}" 
                 fill="${gradient}"/>`);
         });
-        
+
         // Gradients
         svgContent.push(this.generateGradients());
+
+        // Marks
+        marks.forEach(mark => {
+            const px = this.margin + (mark.x - box.minX) * this.gridSize;
+            const py = this.margin + (mark.y - box.minY) * this.gridSize;
+            
+            // Find if there's a stone at this position
+            const stone = stones.find(s => s.x === mark.x && s.y === mark.y);
+            const markColor = stone?.color === 'black' ? 'white' : 'black';
+            const markSize = this.gridSize * 0.6; // Size for shapes
+    
+            //Only ever 1 mark per location
+            const markType = Object.keys(mark.marks)[0];
+            const markValue = mark.marks[markType];
+            
+            switch(markType) {
+                case 'letter':
+                    svgContent.push(`<text 
+                        x="${px}" 
+                        y="${py + (this.gridSize * 0.2)}" 
+                        text-anchor="middle" 
+                        dominant-baseline="central"
+                        fill="${markColor}"
+                        font-size="${this.gridSize * 0.7}"
+                        font-weight="bold"
+                        font-family="Arial">${markValue}</text>`);
+                    break;
+                case 'square':
+                    const halfSize = markSize / 2;
+                    svgContent.push(`<rect 
+                        x="${px - halfSize}" 
+                        y="${py - halfSize}" 
+                        width="${markSize}" 
+                        height="${markSize}"
+                        stroke="${markColor}"
+                        stroke-width="4"
+                        fill="none"/>`);
+                    break;
+                case 'circle':
+                    svgContent.push(`<circle 
+                        cx="${px}" 
+                        cy="${py}" 
+                        r="${markSize / 2}"
+                        stroke="${markColor}"
+                        stroke-width="4"
+                        fill="none"/>`);
+                    break;
+                case 'triangle':
+                    const size = markSize;
+                    const height = size * Math.sqrt(3) / 2;
+                    const points = [
+                        `${px},${py - height/2}`,
+                        `${px - size/2},${py + height/2}`,
+                        `${px + size/2},${py + height/2}`
+                    ].join(' ');
+                    svgContent.push(`<polygon 
+                        points="${points}"
+                        stroke="${markColor}"
+                        stroke-width="4"
+                        fill="none"/>`);
+                    break;
+                case 'cross':
+                    const crossSize = markSize / 2.5;
+                    svgContent.push(`<path 
+                        d="M${px-crossSize},${py-crossSize} L${px+crossSize},${py+crossSize} M${px-crossSize},${py+crossSize} L${px+crossSize},${py-crossSize}"
+                        stroke="${markColor}"
+                        stroke-width="4"/>`);
+                    break;
+            }
+        });
         
         // Close SVG
         svgContent.push('</svg>');
@@ -137,16 +197,16 @@ class GoBoardImageBuilder {
 
     addCroppedCoordinateLabels(svgContent, box) {
         const letters = 'ABCDEFGHJKLMNOPQRST'; // Skip 'I' as per Go convention
-        
+
         // Add column labels (letters)
         for (let i = box.minX; i <= box.maxX; i++) {
             const x = this.margin + (i - box.minX) * this.gridSize;
             // Top labels
-            svgContent.push(`<text x="${x}" y="${this.margin - 20}" 
-                text-anchor="middle" font-size="16">${letters[i]}</text>`);
+            svgContent.push(`<text x="${x}" y="${this.margin - 10}" 
+                text-anchor="middle" font-size="32">${letters[i]}</text>`);
             // Bottom labels
-            svgContent.push(`<text x="${x}" y="${(box.maxY - box.minX + 1) * this.gridSize + this.margin + 30}" 
-                text-anchor="middle" font-size="16">${letters[i]}</text>`);
+            svgContent.push(`<text x="${x}" y="${(box.maxY + 1) * this.gridSize + this.margin}" 
+                text-anchor="middle" font-size="32">${letters[i]}</text>`);
         }
         
         // Add row labels (numbers)
@@ -154,11 +214,11 @@ class GoBoardImageBuilder {
             const y = this.margin + (i - box.minY) * this.gridSize;
             const label = this.size - i;
             // Left labels
-            svgContent.push(`<text x="${this.margin - 20}" y="${y + 6}" 
-                text-anchor="end" font-size="16">${label}</text>`);
+            svgContent.push(`<text x="${this.margin - 20}" y="${y + 10}" 
+                text-anchor="end" font-size="32">${label}</text>`);
             // Right labels
-            svgContent.push(`<text x="${(box.maxX - box.minX + 1) * this.gridSize + this.margin + 20}" y="${y + 6}" 
-                text-anchor="start" font-size="16">${label}</text>`);
+            svgContent.push(`<text x="${(box.maxX - box.minX + 1) * this.gridSize + this.margin - 10}" y="${y + 10}" 
+                text-anchor="start" font-size="32">${label}</text>`);
         }
     }
 
@@ -251,11 +311,23 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
         game.pass();
     }
 
+    let state = {};
+
     if(playerPastMoves === undefined || playerPastMoves.length == 0){
-        return game.positionStack[0];
+        state = game.positionStack[0];
+        if(moveTree.marks != undefined){
+            state.marks = moveTree.marks;
+        }
+
+        if (moveTree.text != undefined){
+            const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+            state.text = cleanText;
+        }
+
+        return state;
     }
 
-    let state = {};
+
 
     //add Players moves
     for (let move of playerPastMoves){
@@ -273,7 +345,6 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
             const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
             state.text = cleanText;
         }
-
 
         if (moveTree === "Incorrect"){
             state.incorrect = true;
@@ -323,6 +394,11 @@ async function simulateMove(inititalWhiteStones,inititalBlackStones
         }
 
     }
+
+    if(moveTree.marks != undefined){
+        state.marks = moveTree.marks;
+    }
+    
     return state;
 }
 

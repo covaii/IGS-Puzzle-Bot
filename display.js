@@ -1,5 +1,5 @@
 const {runBoard, GoBoardImageBuilder, sgfToCoords, wgoGridToImageStones, standardNotationToSGF, coordsToStandard } = require("./board.js");
-const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones} = require('./OGS.js');
+const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones,getMoveTree,getPuzzleCollection} = require('./OGS.js');
 const { getActivePuzzleID,getActiveServerName,getServerName,getScores } = require("./database.js");
 const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder } = require("discord.js");
 const Wgo = require("wgo");
@@ -17,7 +17,6 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         }
 
         const stones = await wgoGridToImageStones(board.grid);
-        // console.log(board);
 
         let text = "";
         let feilds = [];
@@ -59,7 +58,7 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
 
         const imageBuilder = new GoBoardImageBuilder(19);
 
-        await imageBuilder.saveAsPNG(stones,userID + ".png");
+        await imageBuilder.saveAsPNG(stones,marks = board.marks,userID + ".png");
         const file = new AttachmentBuilder(userID + ".png");
 
         const embed = new EmbedBuilder()
@@ -84,10 +83,16 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
 
 async function showPuzzle(interaction,puzzleID="" ){
     const stones = await inititalStoneConverter(puzzleID);
+    const moveTree = await getMoveTree(puzzleID);
+    let marks = [];
+
+    if(moveTree.marks != undefined){
+        marks = moveTree.marks;
+    }
 
     const board = new GoBoardImageBuilder(19);
     
-    await board.saveAsPNG(stones,interaction.id + ".png");
+    await board.saveAsPNG(stones,marks = marks,interaction.id + ".png");
     const file = new AttachmentBuilder(interaction.id + ".png");
 
     let feilds = [];
@@ -112,10 +117,16 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
     const puzzleID = await getActivePuzzleID(client,"",guildID);
     const stones = await inititalStoneConverter(puzzleID);
     const channel = await client.channels.fetch(channelID);
+    const moveTree = await getMoveTree(puzzleID);
+    let marks = [];
+
+    if(moveTree.marks != undefined){
+        marks = moveTree.marks;
+    }
     
     const board = new GoBoardImageBuilder(19);
     
-    await board.saveAsPNG(stones,guildID + ".png");
+    await board.saveAsPNG(stones,marks = marks,guildID + ".png");
     const file = new AttachmentBuilder(guildID + ".png");
 
     let feilds = [];
@@ -150,6 +161,12 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
 async function getPuzzleDetails(puzzleID) {
     let feilds = [];
     feilds.push({
+        name: "Collection",
+        value: await getPuzzleCollection(puzzleID) + "\n\n",
+        inline: true
+    });
+
+    feilds.push({
         name:'Author',
         value: await getPuzzleAuthor(puzzleID) + "\n\n",
         inline: true
@@ -167,6 +184,8 @@ async function getPuzzleDetails(puzzleID) {
         value: await getPuzzleDiscription(puzzleID) + "\n\n",
         inline: true
     });
+
+
     return feilds;
 }
 

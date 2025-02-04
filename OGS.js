@@ -84,12 +84,20 @@ async function getPuzzleDiscription(puzzleID){
         throw error;
         return;
     }
-
-    return response.data.puzzle.puzzle_description;
+    const cleanText = response.data.puzzle.puzzle_description.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    return cleanText;
 }
 
-
-
+async function getPuzzleCollection(puzzleID){
+    try{
+        response = await getPuzzle(puzzleID);
+    }catch(error){
+        throw error;
+        return;
+    }
+    const cleanText = response.data.collection.name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    return cleanText;
+}
 
 
 
@@ -101,5 +109,6 @@ module.exports = {
     getPuzzleAuthor,
     getPuzzleDiscription,
     getPuzzleCollection,
-    getAllPuzzlesInCollection
+    getAllPuzzlesInCollection,
+    getPuzzleCollection
 };
