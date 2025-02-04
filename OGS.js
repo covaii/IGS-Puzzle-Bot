@@ -84,13 +84,9 @@ async function getPuzzleDiscription(puzzleID){
         throw error;
         return;
     }
-
-    return response.data.puzzle.puzzle_description;
+    const cleanText = response.data.puzzle.puzzle_description.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    return cleanText;
 }
-
-
-
-
 
 
 module.exports = {

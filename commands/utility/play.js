@@ -81,9 +81,6 @@ module.exports = {
 
 
             runAndSendBoard(interaction.client,interaction.user.id,"",true,true);
-
         }
-
-
 	},
 };
