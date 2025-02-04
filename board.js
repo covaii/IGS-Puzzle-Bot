@@ -137,7 +137,7 @@ class GoBoardImageBuilder {
                 case 'letter':
                     svgContent.push(`<text 
                         x="${px}" 
-                        y="${py + (this.gridSize * 0.2)}" 
+                        y="${py + (this.gridSize * 0.25)}" 
                         text-anchor="middle" 
                         dominant-baseline="central"
                         fill="${markColor}"
@@ -202,7 +202,7 @@ class GoBoardImageBuilder {
         for (let i = box.minX; i <= box.maxX; i++) {
             const x = this.margin + (i - box.minX) * this.gridSize;
             // Top labels
-            svgContent.push(`<text x="${x}" y="${this.margin - 10}" 
+            svgContent.push(`<text x="${x}" y="${this.margin - 20}" 
                 text-anchor="middle" font-size="32">${letters[i]}</text>`);
             // Bottom labels
             svgContent.push(`<text x="${x}" y="${(box.maxY + 1) * this.gridSize + this.margin}" 
