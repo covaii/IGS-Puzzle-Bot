@@ -233,6 +233,11 @@ async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
     await interaction.deferReply();
     const users = await getScores(client,guildID);
 
+    if(users.length < 1){
+        interaction.editReply("No users on the leaderboard");
+        return;
+    }
+
     for (user of users){
         const member = await interaction.guild.members.fetch(user.userId);
         user.name = member.displayName;
