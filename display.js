@@ -1,7 +1,8 @@
 const {runBoard, GoBoardImageBuilder, sgfToCoords, wgoGridToImageStones, standardNotationToSGF, coordsToStandard } = require("./board.js");
 const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones,getMoveTree,getPuzzleCollection} = require('./OGS.js');
 const { getActivePuzzleID,getActiveServerName,getServerName,getScores } = require("./database.js");
-const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder } = require("discord.js");
+const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder, DiscordAPIError } = require("discord.js");
+
 const Wgo = require("wgo");
 const fs = require('fs');
 
@@ -233,16 +234,28 @@ async function leaderBoard(interaction,client,guildID,numOfUsersToShow = 10) {
     await interaction.deferReply();
     const users = await getScores(client,guildID);
 
+    let validUsers = [];
+
     for (user of users){
-        const member = await interaction.guild.members.fetch(user.userId);
-        user.name = member.displayName;
+        try{
+            const member = await interaction.guild.members.fetch(user.userId);
+            user.name = member.displayName;
+            validUsers.push(user);
+        }catch(DiscordAPIError){
+            continue;
+        }
+    }
+
+    if(validUsers.length < 1){
+        interaction.editReply("No users on the leaderboard");
+        return;
     }
 
     const embed = new EmbedBuilder()
     .setColor('#0099ff')
     .setTitle('Leaderboard')
     .setDescription(
-        users.sort((a, b) => b.score - a.score)
+        validUsers.sort((a, b) => b.score - a.score)
         .slice(0, numOfUsersToShow)
         .map((user, index) => `#${index + 1} ${user.name}: ${user.score}`)
         .join('\n')
