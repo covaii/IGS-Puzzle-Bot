@@ -178,3 +178,6 @@ Skwidder
 ## Support
 
 For issues and feature requests, please use the GitHub issues page.
+
+### Support Me
+Support this project and others like it on Ko-Fi: https://ko-fi.com/skwidder
