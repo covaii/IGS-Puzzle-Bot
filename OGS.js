@@ -110,5 +110,6 @@ module.exports = {
     getPuzzleDiscription,
     getPuzzleCollection,
     getAllPuzzlesInCollection,
-    getPuzzleCollection
+    getPuzzleCollection,
+    getPuzzleCollectionName
 };
