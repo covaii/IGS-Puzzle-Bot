@@ -1,5 +1,5 @@
 const {runBoard, GoBoardImageBuilder, sgfToCoords, wgoGridToImageStones, standardNotationToSGF, coordsToStandard } = require("./board.js");
-const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones,getMoveTree,getPuzzleCollection} = require('./OGS.js');
+const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones,getMoveTree,getPuzzleCollectionName} = require('./OGS.js');
 const { getActivePuzzleID,getActiveServerName,getServerName,getScores } = require("./database.js");
 const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder, DiscordAPIError } = require("discord.js");
 
@@ -163,7 +163,7 @@ async function getPuzzleDetails(puzzleID) {
     let feilds = [];
     feilds.push({
         name: "Collection",
-        value: await getPuzzleCollection(puzzleID) + "\n\n",
+        value: await getPuzzleCollectionName(puzzleID) + "\n\n",
         inline: true
     });
 

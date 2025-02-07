@@ -88,7 +88,7 @@ async function getPuzzleDiscription(puzzleID){
     return cleanText;
 }
 
-async function getPuzzleCollection(puzzleID){
+async function getPuzzleCollectionName(puzzleID){
     try{
         response = await getPuzzle(puzzleID);
     }catch(error){
