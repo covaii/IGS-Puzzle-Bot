@@ -117,7 +117,15 @@ async function showPuzzle(interaction,puzzleID="" ){
 async function annoucePuzzle(client,guildID,channelID,role = ""){
     const puzzleID = await getActivePuzzleID(client,"",guildID);
     const stones = await inititalStoneConverter(puzzleID);
-    const channel = await client.channels.fetch(channelID);
+
+    try{
+        channel = await client.channels.fetch(channelID);
+    }catch(e){
+        console.log("Bot Does not have access to channel: " + channelID +
+            " On Server: " + guildID);
+        return;
+    }
+    
     const moveTree = await getMoveTree(puzzleID);
     let marks = [];
 
