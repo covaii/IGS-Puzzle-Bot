@@ -117,7 +117,8 @@ async function showPuzzle(interaction,puzzleID="" ){
 async function annoucePuzzle(client,guildID,channelID,role = ""){
     const puzzleID = await getActivePuzzleID(client,"",guildID);
     const stones = await inititalStoneConverter(puzzleID);
-
+    let channel;
+    
     try{
         channel = await client.channels.fetch(channelID);
     }catch(e){
