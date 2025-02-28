@@ -251,7 +251,8 @@ async function incrementScore(client,userID){
     },
     {
         $inc: {
-            "guilds.$.score": 1
+            "guilds.$.score": 1,
+            "guilds.$.all_time_score": 1
         }
     }
 );
