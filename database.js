@@ -251,7 +251,8 @@ async function incrementScore(client,userID){
     },
     {
         $inc: {
-            "guilds.$.score": 1
+            "guilds.$.score": 1,
+            "guilds.$.all_time_score": 1
         }
     }
 );
@@ -313,25 +314,27 @@ async function getInProgessPuzzles(client,userID){
   return inProgressPuzzles;
 }
 
-async function getScores(client,guildID){
+async function getScores(client,guildId){
   const clientdb = client.dbconn.db("Puzzle_Bot");
   const userColl = clientdb.collection("users");
 
-  const userArray =  await userColl.aggregate([
-    // Unwind the guilds array to work with individual guild documents
-    { $unwind: "$guilds" },
-    
-    // Match only the specific guild we want
-    { $match: { "guilds.guildId": guildID } },
-    
-    // Project only the fields we need
-    { $project: {
-        userId: 1,
-        score: "$guilds.score"
-    }}
-  ]).toArray();
+  const userArray = await userColl.find({
+    guilds:{
+      $elemMatch:{
+        "guildId": guildId
+      }
+    }},
+    {
+      "userId": 1,
+      "guilds.$": 1
+    }).toArray();
 
-  return userArray;
+    const scoreData = userArray.map(user => ({
+      userId: user.userId,
+      score: user.guilds[0].score  // The first (and only) element in the filtered guilds array
+    }));
+
+  return scoreData;
 }
 
 
@@ -378,6 +381,37 @@ async function nextPuzzle(client,guildId){
   return "Server moved to next puzzle!";
 }
 
+async function resetLeaderboard(client,guildId){
+  const clientdb = client.dbconn.db("Puzzle_Bot");
+  const userColl = clientdb.collection("users");
+
+  await userColl.updateMany({
+      "guilds.guildId": guildId
+    },
+    { $set :{ "guilds.$.score": 0} }
+  );
+
+  // Find all users who have solved puzzles in this guild
+  const usersWithSolvedPuzzles = await userColl.find({
+    "guilds": {
+      $elemMatch: {
+        "guildId": guildId,
+        "solved": true
+      }
+    }
+  }).toArray();
+
+  // Update each user individually to set their score to 1
+  for (const user of usersWithSolvedPuzzles) {
+    await userColl.updateOne({ 
+        "userId": user.userId,
+        "guilds.guildId": guildId
+      },
+      { $set: { "guilds.$.score": 1 } }
+    );
+  }
+}
+
 
 module.exports = {
   ensureAllServersExist,
@@ -399,5 +433,6 @@ module.exports = {
   getInProgessPuzzles,
   getScores,
   getServerApprovedCollections,
-  nextPuzzle
+  nextPuzzle,
+  resetLeaderboard
 };
