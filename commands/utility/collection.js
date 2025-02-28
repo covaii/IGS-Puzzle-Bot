@@ -35,10 +35,11 @@ module.exports = {
 
         const clientdb = interaction.client.dbconn.db("Puzzle_Bot");
         const coll = clientdb.collection("servers");
+        let id;
 
         switch(subcommand){
             case 'add':
-                let id = await checkName(interaction,collectionName);
+                id = await checkName(interaction,collectionName);
                 
                 await coll.updateOne(
                     {serverId : interaction.guild.id},
@@ -57,20 +58,31 @@ module.exports = {
                 }).toArray();
 
                 collections = await collections[0].approved_collections
-                console.log(collections);
 
                 if(collections.length == 0){
                     await interaction.reply("No approved collections!");
                     return;
                 }
                 let reply = "";
-                for(collId of collections){
-                    reply = reply + await getPuzzleCollectionNamefromID(collId) + "\n";
+                for(id of collections){
+                    reply = reply + await getPuzzleCollectionNamefromID(id) + "\n";
                 }
                 interaction.reply(reply);
                 break;
             case 'remove':
-                interaction.reply("TODO");
+                id = await checkName(interaction,collectionName);
+                
+                await coll.updateOne(
+                    {serverId : interaction.guild.id},
+                    {
+                        $pull: {
+                            approved_collections: response.data.results[0].id
+                        }
+                    }
+                );
+
+                interaction.reply("Collection: " + collectionName + " removed!");
+                break;
         }
 
     },
