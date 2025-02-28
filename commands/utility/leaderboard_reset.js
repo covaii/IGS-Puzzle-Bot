@@ -9,6 +9,6 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 	async execute(interaction) {
 		resetLeaderboard(interaction.client,interaction.guildId);
-        interaction.reply("reset");
+        interaction.reply("Leaderboard Reset!");
 	},
 };
