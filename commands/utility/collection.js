@@ -72,7 +72,7 @@ module.exports = {
             case 'remove':
                 id = await checkName(interaction,collectionName);
                 
-                await coll.updateOne(
+                const results = await coll.updateOne(
                     {serverId : interaction.guild.id},
                     {
                         $pull: {
@@ -81,7 +81,11 @@ module.exports = {
                     }
                 );
 
-                interaction.reply("Collection: " + collectionName + " removed!");
+                if(results.modifiedCount == 0){
+                    interaction.reply("Collection: " + collectionName + " not in approved collections list");
+                }else{
+                    interaction.reply("Collection: " + collectionName + " removed!");
+                }
                 break;
         }
 
