@@ -99,6 +99,17 @@ async function getPuzzleCollectionName(puzzleID){
     return cleanText;
 }
 
+async function getPuzzleCollectionNamefromID(collectionId){
+    try{
+        response = await axios.get("https://online-go.com/api/v1/puzzles/collections?id=" + collectionId);
+    }catch(error){
+        throw error;
+        return;
+    }
+    const cleanText = response.data.results[0].name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    return cleanText;
+}
+
 
 
 module.exports = {
@@ -111,5 +122,6 @@ module.exports = {
     getPuzzleCollection,
     getAllPuzzlesInCollection,
     getPuzzleCollection,
-    getPuzzleCollectionName
+    getPuzzleCollectionName,
+    getPuzzleCollectionNamefromID
 };
