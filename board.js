@@ -64,7 +64,6 @@ class GoBoardImageBuilder {
         const fullWidth = this.size == box.maxX - box.minX + 1
         const fullHeight = this.size == box.maxY - box.minY + 1
 
-        console.log(this.size, box.maxX - box.minX)
         const width = fullWidth ? this.size : box.maxX - box.minX + 1;
         const height = fullHeight ? this.size : box.maxY - box.minY + 1;
 
