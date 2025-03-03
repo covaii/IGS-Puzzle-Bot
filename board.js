@@ -84,7 +84,6 @@ class GoBoardImageBuilder {
         const leftBleed = (fullWidth || box.anchorLeft ? 0 : this.hBleed) * this.gridSize
         const rightBleed = (fullWidth || !box.anchorLeft ? 0 : this.hBleed) * this.gridSize
 
-        console.debug(topBleed, bottomBleed, leftBleed, rightBleed)
         // Grid lines
         for (let i = box.minX; i <= box.maxX; i++) {
             const x = this.margin + (i - box.minX) * this.gridSize;
