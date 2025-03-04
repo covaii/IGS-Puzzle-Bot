@@ -14,7 +14,10 @@ or feel free to self host.
 - `/add_puzzle [id] [position]` - Add an OGS puzzle to the server queue
 - `/announce_puzzle [channel] [role?]` - Announce the current puzzle in a specific channel
 - `/next_puzzle` - Move to the next puzzle in the queue
-- `/add_collection [Collection Name]` Adds a puzzle collection to the approved collection list. This list will be used to randomly get a puzzle if the puzzle queue is empty
+- `/collection add [Collection Name]` - Adds a puzzle collection to the approved collection list. This list will be used to randomly get a puzzle if the puzzle queue is empty
+- `/collection remove [Collection Name]` - Removes a puzzle collection from the approved collection list.
+- `/collection list [Collection Name]` - Lists all approved collections
+- `/leaderboard reset` - Resets the leaderboard
 
 # Scheduling Puzzles
 
