@@ -25,79 +25,79 @@ async function getAllPuzzlesInCollection(collectionId){
     return puzzles;
 }
 
-async function getInitialStones(puzzleID){
-    try{
-        response = await getPuzzle(puzzleID);
-    }catch(error){
-        throw error;
-        return;
-    }
+// async function getInitialStones(puzzleID){
+//     try{
+//         response = await getPuzzle(puzzleID);
+//     }catch(error){
+//         throw error;
+//         return;
+//     }
 
-    whiteStonesInital = response.data.puzzle.initial_state.white;
-    blackStonesInital = response.data.puzzle.initial_state.black;
+//     whiteStonesInital = response.data.puzzle.initial_state.white;
+//     blackStonesInital = response.data.puzzle.initial_state.black;
 
-    return {whiteStonesInital, blackStonesInital};
-}
+//     return {whiteStonesInital, blackStonesInital};
+// }
 
-async function getPlayerColor(puzzleID){
-    try{
-        response = await getPuzzle(puzzleID);
-    }catch(error){
-        throw error;
-        return;
-    }
+// async function getPlayerColor(puzzleID){
+//     try{
+//         response = await getPuzzle(puzzleID);
+//     }catch(error){
+//         throw error;
+//         return;
+//     }
 
-    const playerColor = response.data.puzzle.initial_player;
-    if(playerColor === 'black'){
-        return Wgo.Color.BLACK;
-    }else{
-        return Wgo.Color.WHITE;
-    }
-}
+//     const playerColor = response.data.puzzle.initial_player;
+//     if(playerColor === 'black'){
+//         return Wgo.Color.BLACK;
+//     }else{
+//         return Wgo.Color.WHITE;
+//     }
+// }
 
-async function getMoveTree(puzzleID){
-    try{
-        response = await getPuzzle(puzzleID);
-    }catch(error){
-        throw error;
-        return;
-    }
+// async function getMoveTree(puzzleID){
+//     try{
+//         response = await getPuzzle(puzzleID);
+//     }catch(error){
+//         throw error;
+//         return;
+//     }
 
-    return response.data.puzzle.move_tree;
-}
+//     return response.data.puzzle.move_tree;
+// }
 
-async function getPuzzleAuthor(puzzleID){
-    try{
-        response = await getPuzzle(puzzleID);
-    }catch(error){
-        throw error;
-        return;
-    }
+// async function getPuzzleAuthor(puzzleID){
+//     try{
+//         response = await getPuzzle(puzzleID);
+//     }catch(error){
+//         throw error;
+//         return;
+//     }
 
-    return response.data.owner.username;
-}
+//     return response.data.owner.username;
+// }
 
-async function getPuzzleDiscription(puzzleID){
-    try{
-        response = await getPuzzle(puzzleID);
-    }catch(error){
-        throw error;
-        return;
-    }
-    const cleanText = response.data.puzzle.puzzle_description.replace(/<(?!br\s*\/?)[^>]+>/g, '');
-    return cleanText;
-}
+// async function getPuzzleDiscription(puzzleID){
+//     try{
+//         response = await getPuzzle(puzzleID);
+//     }catch(error){
+//         throw error;
+//         return;
+//     }
+//     const cleanText = response.data.puzzle.puzzle_description.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+//     return cleanText;
+// }
 
-async function getPuzzleCollectionName(puzzleID){
-    try{
-        response = await getPuzzle(puzzleID);
-    }catch(error){
-        throw error;
-        return;
-    }
-    const cleanText = response.data.collection.name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
-    return cleanText;
-}
+// async function getPuzzleCollectionName(puzzleID){
+//     try{
+//         response = await getPuzzle(puzzleID);
+//     }catch(error){
+//         throw error;
+//         return;
+//     }
+//     const cleanText = response.data.collection.name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+//     return cleanText;
+// }
 
 async function getPuzzleCollectionNamefromID(collectionId){
     try{
@@ -110,18 +110,39 @@ async function getPuzzleCollectionNamefromID(collectionId){
     return cleanText;
 }
 
+async function getPuzzleInfo(puzzleId){
+    let info = {};
+    try{
+        response = await getPuzzle(puzzleId);
+    }catch(error){
+        throw error;
+        return;
+    }
+
+    info.collectionName = response.data.collection.name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    info.author = response.data.owner.username;
+    info.description = response.data.puzzle.puzzle_description.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    info.whiteStonesInital = response.data.puzzle.initial_state.white;
+    info.blackStonesInital = response.data.puzzle.initial_state.black;
+    info.moveTree = response.data.puzzle.move_tree;
+
+    const playerColor = response.data.puzzle.initial_player;
+    if(playerColor === 'black'){
+        info.playerColor = Wgo.Color.BLACK;
+    }else{
+        info.playerColor = Wgo.Color.WHITE;
+    }
+
+    return info;
+}
+
 
 
 module.exports = {
     getPuzzle,
-    getInitialStones,
-    getPlayerColor,
-    getMoveTree,
-    getPuzzleAuthor,
-    getPuzzleDiscription,
     getPuzzleCollection,
     getAllPuzzlesInCollection,
     getPuzzleCollection,
-    getPuzzleCollectionName,
-    getPuzzleCollectionNamefromID
+    getPuzzleCollectionNamefromID,
+    getPuzzleInfo
 };

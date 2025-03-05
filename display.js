@@ -1,5 +1,5 @@
 const {runBoard, GoBoardImageBuilder, sgfToCoords, wgoGridToImageStones, standardNotationToSGF, coordsToStandard } = require("./board.js");
-const {getPuzzleAuthor,getPuzzleDiscription,getInitialStones,getMoveTree,getPuzzleCollectionName} = require('./OGS.js');
+const {getPuzzleInfo} = require('./OGS.js');
 const { getActivePuzzleID,getActiveServerName,getServerName,getScores } = require("./database.js");
 const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder, DiscordAPIError } = require("discord.js");
 
@@ -22,6 +22,8 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         let text = "";
         let feilds = [];
 
+        const info = await getPuzzleInfo(await getActivePuzzleID(client,userID));
+
         if(showHelp){
             // text = text + "Use !Location to play a move (eg. !B17) \n" +
             // "Use !reset to reset puzzle to starting setup \n"
@@ -31,7 +33,7 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         }
 
         if(showPuzzleInfo){
-            feilds.push(... await getPuzzleDetails(await getActivePuzzleID(client,userID)));
+            feilds.push(... await infoToEmbedFeilds(info));
         }
 
         if(board.response_move != undefined){
@@ -83,8 +85,10 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
 
 
 async function showPuzzle(interaction,puzzleID="" ){
-    const stones = await inititalStoneConverter(puzzleID);
-    const moveTree = await getMoveTree(puzzleID);
+    const info = await getPuzzleInfo(puzzleID);
+
+    const stones = await inititalStoneConverter(info.blackStonesInital,info.whiteStonesInital);
+    const moveTree = info.moveTree;
     let marks = [];
 
     if(moveTree.marks != undefined){
@@ -97,7 +101,7 @@ async function showPuzzle(interaction,puzzleID="" ){
     const file = new AttachmentBuilder(interaction.id + ".png");
 
     let feilds = [];
-    feilds.push(... await getPuzzleDetails(puzzleID));
+    feilds.push(... await infoToEmbedFeilds(info));
 
     const embed = new EmbedBuilder()
         .setColor(0x0099FF)
@@ -116,7 +120,9 @@ async function showPuzzle(interaction,puzzleID="" ){
 
 async function annoucePuzzle(client,guildID,channelID,role = ""){
     const puzzleID = await getActivePuzzleID(client,"",guildID);
-    const stones = await inititalStoneConverter(puzzleID);
+    const info = await getPuzzleInfo(puzzleID);
+
+    const stones = await inititalStoneConverter(info.blackStonesInital,info.whiteStonesInital);
     let channel;
     
     try{
@@ -127,7 +133,7 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
         return;
     }
     
-    const moveTree = await getMoveTree(puzzleID);
+    const moveTree = info.moveTree;
     let marks = [];
 
     if(moveTree.marks != undefined){
@@ -140,7 +146,7 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
     const file = new AttachmentBuilder(guildID + ".png");
 
     let feilds = [];
-    feilds.push(... await getPuzzleDetails(puzzleID));
+    feilds.push(... await infoToEmbedFeilds(info));
     feilds.push({name:"How To Play",value:"Just type /play"})
 
     const embed = new EmbedBuilder()
@@ -157,9 +163,6 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
         text = `<@&${role}>`;
         await channel.send({content: text, embeds: [embed], files: [file]});
     }
-
-
-    
     
     fs.unlink(guildID + ".png", function (err){
         if (err) throw err;
@@ -168,30 +171,30 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
 
 
 
-async function getPuzzleDetails(puzzleID) {
+async function infoToEmbedFeilds(puzzleInfo) {
     let feilds = [];
     feilds.push({
         name: "Collection",
-        value: await getPuzzleCollectionName(puzzleID) + "\n\n",
+        value: puzzleInfo.collectionName + "\n\n",
         inline: true
     });
 
     feilds.push({
         name:'Author',
-        value: await getPuzzleAuthor(puzzleID) + "\n\n",
+        value:  puzzleInfo.author + "\n\n",
         inline: true
     });
 
     //Discord Embed dose not allow a feild to be longer than 1024 characters,
     //so if the description is longer than that lets just set it to nothing
-    let description = await getPuzzleDiscription(puzzleID) + "\n\n";
+    let description = puzzleInfo.description + "\n\n";
     if(description.length > 1024){
         return feilds;
     }
 
     feilds.push({
         name: "Description",
-        value: await getPuzzleDiscription(puzzleID) + "\n\n",
+        value:  description + "\n\n",
         inline: true
     });
 
@@ -200,17 +203,15 @@ async function getPuzzleDetails(puzzleID) {
 }
 
 
-async function inititalStoneConverter(puzzleID){
-    const initalStones = await getInitialStones(puzzleID);
-
+async function inititalStoneConverter(blackStonesInital,whiteStonesInital){
     stones = [];
-    for (let i = 0; i < initalStones.whiteStonesInital.length; i = i + 2){
-        const cords = sgfToCoords(initalStones.whiteStonesInital[i] + initalStones.whiteStonesInital[i+1]);
+    for (let i = 0; i < whiteStonesInital.length; i = i + 2){
+        const cords = sgfToCoords(whiteStonesInital[i] + whiteStonesInital[i+1]);
         stones.push({x: cords.x, y:cords.y , color: 'white'});
     }
 
-    for (let i = 0; i < initalStones.blackStonesInital.length; i = i + 2){
-        const cords = sgfToCoords(initalStones.blackStonesInital[i] + initalStones.blackStonesInital[i+1]);
+    for (let i = 0; i < blackStonesInital.length; i = i + 2){
+        const cords = sgfToCoords(blackStonesInital[i] + blackStonesInital[i+1]);
         stones.push({x: cords.x, y:cords.y , color: 'black'});
     }
 
