@@ -3,7 +3,7 @@ const sharp = require('sharp');
 const { addUserActiveStone, getUsersActiveStones, getActivePuzzleID, getActiveServerName, removeLastUserStone, checkSolved,
     incrementScore, incrementTries, setSolved
 } = require("./database.js");
-const { getInitialStones, getPlayerColor, getMoveTree, getPuzzleAuthor, getPuzzleDiscription } = require('./OGS.js');
+const { getPuzzleInfo } = require('./OGS.js');
 const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const Wgo = require("wgo");
 
@@ -277,16 +277,13 @@ async function runBoard(client, userId, addStone = "") {
 
 
     const puzzleID = await getActivePuzzleID(client, userId);
-    const inititalStones = await getInitialStones(puzzleID);
-
-    const playerColor = await getPlayerColor(puzzleID);
-    const moveTree = await getMoveTree(puzzleID);
+    const puzzleInfo = await getPuzzleInfo(puzzleID);
 
     const userStones = await getUsersActiveStones(client, userId);
 
-    const response = await simulateMove(inititalStones.whiteStonesInital, inititalStones.blackStonesInital,
-        userStones, playerColor, moveTree
-    )
+    const response = await simulateMove(puzzleInfo.whiteStonesInital, puzzleInfo.blackStonesInital,
+        userStones, puzzleInfo.playerColor , puzzleInfo.moveTree
+    );
 
     //only happens when a move was invalid
     if (response == false) {
