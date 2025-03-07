@@ -282,7 +282,7 @@ async function runBoard(client, userId, addStone = "") {
     const userStones = await getUsersActiveStones(client, userId);
 
     const response = await simulateMove(puzzleInfo.whiteStonesInital, puzzleInfo.blackStonesInital,
-        userStones, puzzleInfo.playerColor , puzzleInfo.moveTree
+        userStones, puzzleInfo.playerColor, puzzleInfo.moveTree
     );
 
     //only happens when a move was invalid
@@ -394,9 +394,8 @@ async function simulateMove(inititalWhiteStones, inititalBlackStones
         //save the reponse move so we can use it when talking to the player
         state.response_move = { x: moveTree.x, y: moveTree.y };
 
-        if (moveTree.marks != undefined) {
-            state.marks = moveTree.marks;
-        }
+        // Copy the marks from the move tree and add a circle to indicate which move is from the response
+        state.marks = [...(moveTree.marks || []), { ...state.response_move, marks: { circle: true } }];
 
         if (moveTree.text != undefined) {
             const cleanText = moveTree.text.replace(/<(?!br\s*\/?)[^>]+>/g, '');
