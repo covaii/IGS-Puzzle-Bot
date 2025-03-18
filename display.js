@@ -8,9 +8,13 @@ const fs = require('fs');
 
 async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,showPuzzleInfo = true){
     try{
+        const info = await getPuzzleInfo(await getActivePuzzleID(client,userID));
+
         const user = await client.users.fetch(userID);
 
-        const board = await runBoard(client,userID,stoneToAdd);
+        const stoneToAddSGF = await standardNotationToSGF(stoneToAdd,info.boardSize);
+
+        const board = await runBoard(client,userID,stoneToAddSGF);
 
         if(board === "Invalid Move"){
             user.send("Invalid Move! Please Provide Valid Move");
@@ -22,11 +26,7 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         let text = "";
         let feilds = [];
 
-        const info = await getPuzzleInfo(await getActivePuzzleID(client,userID));
-
         if(showHelp){
-            // text = text + "Use !Location to play a move (eg. !B17) \n" +
-            // "Use !reset to reset puzzle to starting setup \n"
             feilds.push({name: "How To Use", value: "Use !Location to play a move (eg. !B17) \nUse !reset to reset puzzle to starting setup \n" +
                 "Use !undo to undo last move"
             });
@@ -37,7 +37,7 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         }
 
         if(board.response_move != undefined){
-            const loc = coordsToStandard(board.response_move.x,board.response_move.y);
+            const loc = coordsToStandard(board.response_move.x,board.response_move.y,info.boardSize);
 
             feilds.push({name: "Puzzle's Response", value: loc});
         }
@@ -59,7 +59,7 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
         }
 
 
-        const imageBuilder = new GoBoardImageBuilder(19);
+        const imageBuilder = new GoBoardImageBuilder(info.boardSize);
 
         await imageBuilder.saveAsPNG(stones,marks = board.marks,userID + ".png");
         const file = new AttachmentBuilder(userID + ".png");
@@ -95,7 +95,7 @@ async function showPuzzle(interaction,puzzleID="" ){
         marks = moveTree.marks;
     }
 
-    const board = new GoBoardImageBuilder(19);
+    const board = new GoBoardImageBuilder(info.boardSize);
     
     await board.saveAsPNG(stones,marks = marks,interaction.id + ".png");
     const file = new AttachmentBuilder(interaction.id + ".png");
@@ -140,7 +140,7 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
         marks = moveTree.marks;
     }
     
-    const board = new GoBoardImageBuilder(19);
+    const board = new GoBoardImageBuilder(info.boardSize);
     
     await board.saveAsPNG(stones,marks = marks,guildID + ".png");
     const file = new AttachmentBuilder(guildID + ".png");
@@ -157,11 +157,17 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
         .setTimestamp();
 
     let text = ""
-    if(role == "" || role == undefined || role == null){
-        await channel.send({embeds: [embed], files: [file]});
-    }else{
-        text = `<@&${role}>`;
-        await channel.send({content: text, embeds: [embed], files: [file]});
+    try{
+        if(role == "" || role == undefined || role == null){
+            await channel.send({embeds: [embed], files: [file]});
+        }else{
+            text = `<@&${role}>`;
+            await channel.send({content: text, embeds: [embed], files: [file]});
+        }
+    }catch(e){
+        console.log("Bot Does not have access to channel: " + channelID +
+            " On Server: " + guildID);
+        return;
     }
     
     fs.unlink(guildID + ".png", function (err){
