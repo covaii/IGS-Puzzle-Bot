@@ -58,9 +58,9 @@ module.exports = {
                     runAndSendBoard(message.client,message.author.id);
                 }else{
 
-                    const SGF = await standardNotationToSGF(message.content.trim().slice(1));
+                    // const SGF = await standardNotationToSGF(message.content.trim().slice(1));
 
-                    runAndSendBoard(message.client,message.author.id,SGF);
+                    runAndSendBoard(message.client,message.author.id,message.content.trim().slice(1));
                 }
             }
         }

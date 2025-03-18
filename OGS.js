@@ -25,80 +25,6 @@ async function getAllPuzzlesInCollection(collectionId){
     return puzzles;
 }
 
-// async function getInitialStones(puzzleID){
-//     try{
-//         response = await getPuzzle(puzzleID);
-//     }catch(error){
-//         throw error;
-//         return;
-//     }
-
-//     whiteStonesInital = response.data.puzzle.initial_state.white;
-//     blackStonesInital = response.data.puzzle.initial_state.black;
-
-//     return {whiteStonesInital, blackStonesInital};
-// }
-
-// async function getPlayerColor(puzzleID){
-//     try{
-//         response = await getPuzzle(puzzleID);
-//     }catch(error){
-//         throw error;
-//         return;
-//     }
-
-//     const playerColor = response.data.puzzle.initial_player;
-//     if(playerColor === 'black'){
-//         return Wgo.Color.BLACK;
-//     }else{
-//         return Wgo.Color.WHITE;
-//     }
-// }
-
-// async function getMoveTree(puzzleID){
-//     try{
-//         response = await getPuzzle(puzzleID);
-//     }catch(error){
-//         throw error;
-//         return;
-//     }
-
-//     return response.data.puzzle.move_tree;
-// }
-
-// async function getPuzzleAuthor(puzzleID){
-//     try{
-//         response = await getPuzzle(puzzleID);
-//     }catch(error){
-//         throw error;
-//         return;
-//     }
-
-//     return response.data.owner.username;
-// }
-
-// async function getPuzzleDiscription(puzzleID){
-//     try{
-//         response = await getPuzzle(puzzleID);
-//     }catch(error){
-//         throw error;
-//         return;
-//     }
-//     const cleanText = response.data.puzzle.puzzle_description.replace(/<(?!br\s*\/?)[^>]+>/g, '');
-//     return cleanText;
-// }
-
-// async function getPuzzleCollectionName(puzzleID){
-//     try{
-//         response = await getPuzzle(puzzleID);
-//     }catch(error){
-//         throw error;
-//         return;
-//     }
-//     const cleanText = response.data.collection.name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
-//     return cleanText;
-// }
-
 async function getPuzzleCollectionNamefromID(collectionId){
     try{
         response = await axios.get("https://online-go.com/api/v1/puzzles/collections?id=" + collectionId);
@@ -125,6 +51,8 @@ async function getPuzzleInfo(puzzleId){
     info.whiteStonesInital = response.data.puzzle.initial_state.white;
     info.blackStonesInital = response.data.puzzle.initial_state.black;
     info.moveTree = response.data.puzzle.move_tree;
+    info.boardSize = response.data.puzzle.width;
+
 
     const playerColor = response.data.puzzle.initial_player;
     if(playerColor === 'black'){

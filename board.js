@@ -12,7 +12,8 @@ class GoBoardImageBuilder {
         this.size = size;
         this.boardSize = 800; // pixels
         this.margin = 50; // margin for labels
-        this.gridSize = (this.boardSize - 2 * this.margin) / (this.size - 1);
+        // this.gridSize = (this.boardSize - (2 * this.margin)) / (this.size - 1);
+        this.gridSize = 50;
         // The amount of lines to extend to show that the board continues in a particular direction
         this.hBleed = 0.3
         this.vBleed = 0.3
@@ -67,6 +68,10 @@ class GoBoardImageBuilder {
         const width = fullWidth ? this.size : box.maxX - box.minX + 1;
         const height = fullHeight ? this.size : box.maxY - box.minY + 1;
 
+        // const svgWidth = width * this.gridSize + 2 * this.margin;
+        // const svgHeight = height * this.gridSize + 2 * this.margin;
+
+
         const svgWidth = width * this.gridSize + 2 * this.margin;
         const svgHeight = height * this.gridSize + 2 * this.margin;
 
@@ -110,7 +115,7 @@ class GoBoardImageBuilder {
             if (x >= box.minX && x <= box.maxX && y >= box.minY && y <= box.maxY) {
                 const px = this.margin + (x - box.minX) * this.gridSize;
                 const py = this.margin + (y - box.minY) * this.gridSize;
-                svgContent.push(`<circle cx="${px}" cy="${py}" r="3" fill="black"/>`);
+                svgContent.push(`<circle cx="${px}" cy="${py}" r="${0.1*this.gridSize}" fill="black"/>`);
             }
         });
 
@@ -271,7 +276,7 @@ class GoBoardImageBuilder {
 async function runBoard(client, userId, addStone = "") {
     //simulate the board then return the stones
 
-    if (addStone !== "") {
+    if (addStone !== "" && addStone !== null) {
         await addUserActiveStone(client, userId, addStone);
     }
 
@@ -282,7 +287,7 @@ async function runBoard(client, userId, addStone = "") {
     const userStones = await getUsersActiveStones(client, userId);
 
     const response = await simulateMove(puzzleInfo.whiteStonesInital, puzzleInfo.blackStonesInital,
-        userStones, puzzleInfo.playerColor, puzzleInfo.moveTree
+        userStones, puzzleInfo.playerColor, puzzleInfo.moveTree, puzzleInfo.boardSize
     );
 
     //only happens when a move was invalid
@@ -304,10 +309,10 @@ async function runBoard(client, userId, addStone = "") {
 }
 
 async function simulateMove(inititalWhiteStones, inititalBlackStones
-    , playerPastMoves = [], playerColor, moveTree) {
+    , playerPastMoves = [], playerColor, moveTree, boardSize) {
 
     //Wgo handles x y coords backwards so we swap them when we place the stone
-    const game = new Wgo.Game(19, "ko");
+    const game = new Wgo.Game(boardSize, "ko");
     for (let i = 0; i < inititalWhiteStones.length; i = i + 2) {
         const coord = sgfToCoords(inititalWhiteStones[i] + inititalWhiteStones[i + 1]);
         game.addStone(coord.y, coord.x, Wgo.Color.WHITE);
@@ -459,19 +464,20 @@ function sgfToCoords(sgf) {
 }
 
 function wgoGridToImageStones(grid = []) {
-    if (grid.length !== 361) {
-        console.log("Array must be exactly 361 elements");
+    const size = Math.sqrt(grid.length)
+    if (!Number.isInteger(size)) {
+        console.log("Grid Must be square");
         return;
     }
 
     stones = []
 
-    for (let row = 0; row < 19; row++) {
+    for (let row = 0; row < size; row++) {
         let line = '';
-        for (let col = 0; col < 19; col++) {
-            if (grid[row * 19 + col] == 0) {
+        for (let col = 0; col < size; col++) {
+            if (grid[row * size + col] == 0) {
                 continue;
-            } else if (grid[row * 19 + col] == 1) {
+            } else if (grid[row * size + col] == 1) {
                 stones.push({ x: col, y: row, color: 'black' })
             } else {
                 stones.push({ x: col, y: row, color: 'white' })
@@ -482,7 +488,7 @@ function wgoGridToImageStones(grid = []) {
 
 }
 
-function standardNotationToSGF(coord) {
+function standardNotationToSGF(coord,size=19) {
     if (!coord || coord.length < 2) {
         return null;
     }
@@ -501,12 +507,12 @@ function standardNotationToSGF(coord) {
 
     // Convert row: SGF counts from bottom-up, a=1
     // For 19x19 board, row 19 = 'a', row 1 = 's'
-    const sgfRow = String.fromCharCode('s'.charCodeAt(0) - row + 1);
+    const sgfRow = String.fromCharCode(('s'.charCodeAt(0) - (19 - size)) - row + 1);
 
     return sgfCol + sgfRow;
 }
 
-function coordsToStandard(x, y, boardSize = 19) {
+function coordsToStandard(x, y, size = 19) {
     // Convert x coordinate (0-18) to letter (A-T, skipping I)
     let col = String.fromCharCode('A'.charCodeAt(0) + x);
     if (x >= 8) { // Adjust for skipping 'I'
@@ -514,8 +520,8 @@ function coordsToStandard(x, y, boardSize = 19) {
     }
 
     // Convert y coordinate (0-18) to board position (19-1)
-    // Since 0,0 is top left, we subtract y from boardSize
-    const row = boardSize - y;
+    // Since 0,0 is top left, we subtract y from size
+    const row = size - y;
 
     return `${col}${row}`;
 }
