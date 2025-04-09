@@ -32,7 +32,7 @@ async function getPuzzleCollectionNamefromID(collectionId){
         throw error;
         return;
     }
-    const cleanText = response.data.results[0].name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
+    const cleanText = response.data.results.name.replace(/<(?!br\s*\/?)[^>]+>/g, '');
     return cleanText;
 }
 
