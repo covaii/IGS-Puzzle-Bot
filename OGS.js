@@ -27,7 +27,7 @@ async function getAllPuzzlesInCollection(collectionId){
 
 async function getPuzzleCollectionNamefromID(collectionId){
     try{
-        response = await axios.get("https://online-go.com/api/v1/puzzles/collections?id=" + collectionId);
+        response = await axios.get("https://online-go.com/api/v1/puzzles/collections/" + collectionId);
     }catch(error){
         throw error;
         return;
