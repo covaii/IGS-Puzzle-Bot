@@ -390,7 +390,14 @@ async function simulateMove(inititalWhiteStones, inititalBlackStones
         //     const branch = Math.floor(Math.random() * moveTree.branches.length);
         //     moveTree = moveTree.branches[branch];
         // }else{
+
+        if(!(moveTree.branches && moveTree.branches.length > 0)){
+            state.incorrect = true;
+            return state;
+        }
+
         moveTree = moveTree.branches[0];
+        
         // }
 
 
@@ -413,6 +420,14 @@ async function simulateMove(inititalWhiteStones, inititalBlackStones
         }
 
         if (moveTree.wrong_answer != undefined && moveTree.wrong_answer === true) {
+            state.incorrect = true;
+            return state;
+        }
+
+        //Needed as sometimes OGS branches can end without a true false maker
+        //so if there is no more moves in this branch we just play the move and 
+        //say they got it incorrect
+        if(!(moveTree.branches && moveTree.branches.length > 0)){
             state.incorrect = true;
             return state;
         }

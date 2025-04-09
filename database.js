@@ -342,8 +342,8 @@ async function nextPuzzle(client,guildId){
   if(queue.length <= 1){
     const approvedCollections = await getServerApprovedCollections(client,guildId);
     if(approvedCollections == null || approvedCollections.length == 0){
-        throw new Error("Not another puzzle in queue! Please add one with /add_puzzle, or add a back-up collection with" +
-            "/add_collection");
+        throw new Error("No puzzle in queue! Please add one with /add_puzzle, or add a back-up collection with" +
+            " /collection add <collection name>");
     }
     
     collectionId = approvedCollections[Math.floor(Math.random() * approvedCollections.length)];

@@ -1,6 +1,6 @@
 const {runBoard, GoBoardImageBuilder, sgfToCoords, wgoGridToImageStones, standardNotationToSGF, coordsToStandard } = require("./board.js");
 const {getPuzzleInfo} = require('./OGS.js');
-const { getActivePuzzleID,getActiveServerName,getServerName,getScores } = require("./database.js");
+const { getActivePuzzleID,getActiveServerName,getServerName,getScores, nextPuzzle } = require("./database.js");
 const { EmbedBuilder,AttachmentBuilder,StringSelectMenuBuilder, ActionRowBuilder, DiscordAPIError } = require("discord.js");
 
 const Wgo = require("wgo");
@@ -119,10 +119,6 @@ async function showPuzzle(interaction,puzzleID="" ){
 
 
 async function annoucePuzzle(client,guildID,channelID,role = ""){
-    const puzzleID = await getActivePuzzleID(client,"",guildID);
-    const info = await getPuzzleInfo(puzzleID);
-
-    const stones = await inititalStoneConverter(info.blackStonesInital,info.whiteStonesInital);
     let channel;
     
     try{
@@ -132,6 +128,24 @@ async function annoucePuzzle(client,guildID,channelID,role = ""){
             " On Server: " + guildID);
         return;
     }
+
+    let puzzleID = await getActivePuzzleID(client,"",guildID);
+    
+    if(puzzleID === undefined || puzzleID === null){
+        try{
+            let rsp = await nextPuzzle(client,guildID);
+            console.log(rsp);
+            puzzleID = await getActivePuzzleID(client,"",guildID);
+        }catch(e){
+            await channel.send({content: e.message});
+            return;
+        }
+    }
+
+    const info = await getPuzzleInfo(puzzleID);
+
+    const stones = await inititalStoneConverter(info.blackStonesInital,info.whiteStonesInital);
+
     
     const moveTree = info.moveTree;
     let marks = [];

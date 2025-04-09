@@ -152,6 +152,11 @@ module.exports = {
                 await nextPuzzle(interaction.client,interaction.guildId);
             }catch(error){
                 console.error("Server: " + interaction.guild.name + " Has no queue or approved collections at scheduled time");
+
+                if (channel == "" || channel == undefined || channel == null){
+                    return;
+                }
+                channel.send({content: error.message});
                 return;
             }
 
