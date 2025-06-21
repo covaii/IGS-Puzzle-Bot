@@ -63,7 +63,10 @@ async function runAndSendBoard(client,userID,stoneToAdd = "",showHelp = false,sh
             // add an empty field to make it 3-column, like the puzzle info above
             // to make both rows aligned with each other
             feilds.push({name:"\u200b",value:"\u200b",inline:true});
-            feilds.push({name:"Puzzle",value:puzzleID.toString(),inline:true});
+
+            const puzzle = puzzleID.toString();
+            const link = `[${puzzle}](https://online-go.com/puzzle/${puzzle})`;
+            feilds.push({name:"Puzzle",value:link,inline:true});
         }
 
         const imageBuilder = new GoBoardImageBuilder(info.boardSize);
